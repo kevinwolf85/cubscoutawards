@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cub Scout Certificate Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="bg"></div>
+    <main class="page">
+      <header class="hero">
+        <div class="badge">Pack Ops</div>
+        <h1>Certificate Generator</h1>
+        <p>
+          Upload a CSV, choose fonts, and generate print-ready Cub Scout award
+          certificates in seconds.
+        </p>
+      </header>
+
+      <section class="card">
+        <div class="card-header">
+          <h2>Inputs</h2>
+          <p>CSV headers: Date, Pack Number, Scout Name, Award Name, Den Leader, Cubmaster.</p>
+        </div>
+
+        <div class="grid">
+          <label class="field">
+            <span>CSV file</span>
+            <div class="dropzone" id="csvDrop">
+              <input type="file" id="csvFile" accept=".csv" />
+              <div>
+                <strong>Drag & drop</strong> or click to browse
+                <small id="csvName">No file selected</small>
+              </div>
+            </div>
+            <a class="template-link" href="/cub_scout_award_template.csv" download>
+              Download template CSV
+            </a>
+          </label>
+
+          <label class="field">
+            <span>Font (all fields)</span>
+            <select id="fontName">
+              <option value="Helvetica">Helvetica</option>
+              <option value="Times-Roman">Times Roman</option>
+              <option value="Courier">Courier</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Verdana">Verdana</option>
+              <option value="Tahoma">Tahoma</option>
+              <option value="TrebuchetMS">Trebuchet MS</option>
+              <option value="TimesNewRoman">Times New Roman</option>
+              <option value="CourierNew">Courier New</option>
+              <option value="Geneva">Geneva</option>
+              <option value="Chalkduster">Chalkduster</option>
+              <option value="AppleChancery">Apple Chancery</option>
+              <option value="BradleyHand">Bradley Hand</option>
+              <option value="BrushScript">Brush Script</option>
+            </select>
+            <div class="font-sample" id="fontSample">Caden Palguta · Pick My Path</div>
+          </label>
+
+          <label class="field">
+            <span>Den Leader / Cubmaster (cursive)</span>
+            <select id="scriptFont">
+              <option value="AppleChancery">Apple Chancery</option>
+              <option value="BradleyHand">Bradley Hand</option>
+              <option value="BrushScript">Brush Script</option>
+              <option value="None">Disable</option>
+            </select>
+            <div class="font-sample script" id="scriptSample">Lindsey Morton · Michael Brantner</div>
+          </label>
+
+          <label class="field">
+            <span>Shift toward barcode (inches)</span>
+            <input type="number" step="0.1" value="0.5" id="shiftLeft" />
+          </label>
+
+          <label class="field">
+            <span>Shift down (inches)</span>
+            <input type="number" step="0.1" value="0" id="shiftDown" />
+          </label>
+
+          <label class="field">
+            <span>Font size</span>
+            <input type="number" step="0.5" value="9" id="fontSize" />
+          </label>
+
+          <label class="field">
+            <span>Output name</span>
+            <input type="text" value="filled_awards.pdf" id="outputName" />
+          </label>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="generateBtn">Generate PDF</button>
+        </div>
+
+        <div class="status" id="status"></div>
+      </section>
+
+      <section class="card outline">
+        <div class="card-header">
+          <h2>Output</h2>
+          <p>Generated file will appear here once the backend is connected.</p>
+        </div>
+        <div class="output" id="outputArea">
+          <div class="placeholder">No output yet</div>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

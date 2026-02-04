@@ -1,0 +1,237 @@
+:root {
+  --ink: #0f172a;
+  --ink-soft: #1e293b;
+  --mute: #64748b;
+  --paper: #f8fafc;
+  --accent: #0ea5a4;
+  --accent-dark: #0f766e;
+  --card: rgba(255, 255, 255, 0.92);
+  --shadow: 0 30px 80px rgba(15, 23, 42, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  min-height: 100vh;
+}
+
+.bg {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top, #dbeafe 0%, transparent 55%),
+    radial-gradient(circle at 20% 20%, #ccfbf1 0%, transparent 50%),
+    radial-gradient(circle at 80% 0%, #fef9c3 0%, transparent 55%);
+  z-index: -1;
+}
+
+.page {
+  max-width: 1100px;
+  margin: 48px auto 80px;
+  padding: 0 24px;
+  display: grid;
+  gap: 28px;
+}
+
+.hero {
+  background: linear-gradient(120deg, #0f172a, #1e293b 55%, #0f766e);
+  color: white;
+  padding: 36px 40px;
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+}
+
+.hero h1 {
+  font-family: "DM Serif Display", serif;
+  font-size: clamp(2.2rem, 2vw + 2rem, 3.5rem);
+  margin: 16px 0 8px;
+}
+
+.hero p {
+  max-width: 640px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 22px;
+  padding: 28px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+}
+
+.card.outline {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.card-header p {
+  margin: 6px 0 0;
+  color: var(--mute);
+}
+
+.grid {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+.field input,
+.field select {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #cbd5f5;
+  font-size: 0.95rem;
+  background: white;
+  outline: none;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(14, 165, 164, 0.2);
+}
+
+.font-sample {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px dashed rgba(148, 163, 184, 0.5);
+  background: rgba(248, 250, 252, 0.9);
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.font-sample.script {
+  font-size: 1.05rem;
+}
+
+.dropzone {
+  border: 1.5px dashed rgba(15, 118, 110, 0.4);
+  border-radius: 16px;
+  padding: 18px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  background: rgba(236, 254, 255, 0.6);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.dropzone input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.dropzone small {
+  display: block;
+  margin-top: 6px;
+  color: var(--mute);
+}
+
+.template-link {
+  font-size: 0.9rem;
+  color: var(--accent-dark);
+  text-decoration: none;
+  padding-left: 6px;
+}
+
+.template-link:hover {
+  text-decoration: underline;
+}
+
+.actions {
+  margin-top: 24px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+button {
+  border: none;
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+button.primary {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 12px 24px rgba(14, 165, 164, 0.35);
+}
+
+button.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 30px rgba(14, 165, 164, 0.35);
+}
+
+button.ghost {
+  background: transparent;
+  color: var(--accent-dark);
+  border: 1px solid rgba(14, 165, 164, 0.35);
+}
+
+.status {
+  margin-top: 18px;
+  font-size: 0.9rem;
+  color: var(--mute);
+  min-height: 20px;
+}
+
+.output {
+  border-radius: 18px;
+  padding: 20px;
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  display: grid;
+  place-items: center;
+  min-height: 160px;
+  background: rgba(248, 250, 252, 0.8);
+}
+
+.placeholder {
+  color: var(--mute);
+}
+
+@media (max-width: 720px) {
+  .hero {
+    padding: 28px;
+  }
+
+  .card {
+    padding: 22px;
+  }
+}

@@ -212,6 +212,18 @@ button.ghost {
   min-height: 20px;
 }
 
+.status[data-type="error"] {
+  color: #b91c1c;
+}
+
+.status[data-type="warn"] {
+  color: #b45309;
+}
+
+.status[data-type="success"] {
+  color: #047857;
+}
+
 .output {
   border-radius: 18px;
   padding: 20px;
@@ -283,6 +295,48 @@ button.ghost {
   padding: 12px;
   background: rgba(255, 255, 255, 0.85);
   border: 1px dashed rgba(148, 163, 184, 0.45);
+}
+
+.validation-summary {
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.validation-summary.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.validation-summary.warn {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.validation-summary.success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.validation-block {
+  margin-top: 8px;
+}
+
+.validation-block strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.validation-block ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.validation-block li {
+  margin: 2px 0;
+  font-size: 0.86rem;
 }
 
 @media (max-width: 720px) {

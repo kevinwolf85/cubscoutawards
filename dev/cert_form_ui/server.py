@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import csv
+import io
 import os
 import re
 import tempfile
+import time
+import zipfile
+from collections import defaultdict, deque
 from pathlib import Path
+from threading import Lock
 from typing import Optional
 
 from flask import Flask, jsonify, request, send_file
@@ -28,6 +34,11 @@ except ModuleNotFoundError:
 
 app = Flask(__name__, static_folder=str(UI_DIR), static_url_path="")
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5 MB CSV upload limit
+
+REQUIRED_HEADERS = ["Date", "Pack Number", "Scout Name", "Award Name", "Den Leader", "Cubmaster"]
+DATE_FORMATS = ("%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y")
+GENERATE_PER_MINUTE = int(os.environ.get("RATE_LIMIT_GENERATE_PER_MINUTE", "12"))
+VALIDATE_PER_MINUTE = int(os.environ.get("RATE_LIMIT_VALIDATE_PER_MINUTE", "30"))
 
 FONT_CHOICES = {
     "Helvetica": {"pdf_name": "Helvetica", "paths": []},
@@ -109,6 +120,30 @@ LEGACY_FONT_ALIASES = {
 }
 
 
+class SlidingWindowLimiter:
+    def __init__(self, max_requests: int, window_seconds: int = 60) -> None:
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self._hits: dict[str, deque[float]] = defaultdict(deque)
+        self._lock = Lock()
+
+    def allow(self, key: str) -> bool:
+        now = time.time()
+        with self._lock:
+            q = self._hits[key]
+            cutoff = now - self.window_seconds
+            while q and q[0] < cutoff:
+                q.popleft()
+            if len(q) >= self.max_requests:
+                return False
+            q.append(now)
+            return True
+
+
+generate_limiter = SlidingWindowLimiter(GENERATE_PER_MINUTE)
+validate_limiter = SlidingWindowLimiter(VALIDATE_PER_MINUTE)
+
+
 def _resolve_font_choice(choice_id: str, catalog: dict) -> tuple[Optional[str], Optional[str]]:
     resolved_id = LEGACY_FONT_ALIASES.get(choice_id, choice_id)
     choice = catalog.get(resolved_id)
@@ -142,14 +177,128 @@ def _parse_float(raw_value: str, fallback: float) -> float:
         return fallback
 
 
+def _safe_base_name(value: str) -> str:
+    name = re.sub(r"[^A-Za-z0-9._-]", "_", value.strip())
+    return name.strip("._-") or "item"
+
+
+def _safe_zip_name(value: str) -> str:
+    filename = Path(value or "").name
+    filename = re.sub(r"[^A-Za-z0-9._-]", "_", filename)
+    if not filename:
+        filename = "filled_awards.zip"
+    if not filename.lower().endswith(".zip"):
+        filename = f"{Path(filename).stem}.zip"
+    return filename
+
+
+def _client_ip() -> str:
+    forwarded_for = request.headers.get("X-Forwarded-For", "")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.remote_addr or "unknown"
+
+
+def _rate_limited_response() -> tuple[dict, int]:
+    return {"error": "Rate limit exceeded. Please wait and try again."}, 429
+
+
+def _is_valid_date(value: str) -> bool:
+    value = (value or "").strip()
+    if not value:
+        return True
+    for fmt in DATE_FORMATS:
+        try:
+            time.strptime(value, fmt)
+            return True
+        except ValueError:
+            continue
+    return False
+
+
+def _parse_csv_bytes(csv_bytes: bytes) -> tuple[list[str], list[dict[str, str]]]:
+    text = csv_bytes.decode("utf-8-sig")
+    reader = csv.DictReader(io.StringIO(text))
+    if not reader.fieldnames:
+        return [], []
+    rows = [row for row in reader if any((v or "").strip() for v in row.values())]
+    return list(reader.fieldnames), rows
+
+
+def _build_validation_report(fieldnames: list[str], rows: list[dict[str, str]]) -> dict[str, object]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    missing = [h for h in REQUIRED_HEADERS if h not in fieldnames]
+    if missing:
+        errors.append(f"Missing required headers: {', '.join(missing)}")
+    if not rows:
+        errors.append("CSV has no data rows.")
+
+    for idx, row in enumerate(rows, start=2):
+        scout_name = (row.get("Scout Name") or "").strip()
+        award_name = (row.get("Award Name") or "").strip()
+        pack_number = (row.get("Pack Number") or "").strip()
+        date_value = (row.get("Date") or "").strip()
+        if not scout_name:
+            errors.append(f"Row {idx}: Scout Name is required.")
+        if not award_name:
+            errors.append(f"Row {idx}: Award Name is required.")
+        if not pack_number:
+            warnings.append(f"Row {idx}: Pack Number is empty.")
+        if date_value and not _is_valid_date(date_value):
+            warnings.append(f"Row {idx}: Date '{date_value}' is not in a recognized format.")
+
+    return {
+        "header_count": len(fieldnames),
+        "row_count": len(rows),
+        "errors": errors,
+        "warnings": warnings,
+        "ok": len(errors) == 0,
+    }
+
+
+def _csv_missing_response() -> tuple[dict, int]:
+    return {"error": "CSV file missing"}, 400
+
+
+@app.post("/validate-csv")
+def validate_csv():
+    if not validate_limiter.allow(_client_ip()):
+        payload, code = _rate_limited_response()
+        return jsonify(payload), code
+
+    if "csv" not in request.files:
+        payload, code = _csv_missing_response()
+        return jsonify(payload), code
+    csv_file = request.files["csv"]
+    if not csv_file.filename:
+        payload, code = _csv_missing_response()
+        return jsonify(payload), code
+
+    try:
+        csv_bytes = csv_file.read()
+        fieldnames, rows = _parse_csv_bytes(csv_bytes)
+    except UnicodeDecodeError:
+        return jsonify({"error": "CSV must be UTF-8 encoded."}), 400
+
+    report = _build_validation_report(fieldnames, rows)
+    return jsonify(report)
+
+
 @app.post("/generate")
 def generate_pdf():
+    if not generate_limiter.allow(_client_ip()):
+        payload, code = _rate_limited_response()
+        return jsonify(payload), code
+
     if "csv" not in request.files:
-        return jsonify({"error": "CSV file missing"}), 400
+        payload, code = _csv_missing_response()
+        return jsonify(payload), code
 
     csv_file = request.files["csv"]
     if not csv_file.filename:
-        return jsonify({"error": "CSV file missing"}), 400
+        payload, code = _csv_missing_response()
+        return jsonify(payload), code
 
     font_choice = request.form.get("fontName", "Helvetica")
     script_choice = request.form.get("scriptFont", "PatrickHand")
@@ -157,10 +306,21 @@ def generate_pdf():
     shift_down = _parse_float(request.form.get("shiftDown", "0.5"), fallback=0.5)
     font_size = _parse_float(request.form.get("fontSize", "14"), fallback=14.0)
     script_font_size = _parse_float(request.form.get("scriptFontSize", "24"), fallback=24.0)
+    output_mode = request.form.get("outputMode", "combined_pdf")
     output_name = _safe_output_name(request.form.get("outputName", "filled_awards.pdf"))
 
     if not TEMPLATE_PATH.exists():
         return jsonify({"error": "Template PDF not configured on server."}), 500
+
+    try:
+        csv_bytes = csv_file.read()
+        fieldnames, rows = _parse_csv_bytes(csv_bytes)
+    except UnicodeDecodeError:
+        return jsonify({"error": "CSV must be UTF-8 encoded."}), 400
+
+    report = _build_validation_report(fieldnames, rows)
+    if not report["ok"]:
+        return jsonify({"error": "CSV validation failed.", "report": report}), 400
 
     font_name, font_file = _resolve_font_choice(font_choice, FONT_CHOICES)
     if not font_name:
@@ -171,9 +331,45 @@ def generate_pdf():
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir_path = Path(tmpdir)
         csv_path = tmpdir_path / "input.csv"
-        out_path = tmpdir_path / output_name
-        csv_file.save(csv_path)
+        csv_path.write_bytes(csv_bytes)
 
+        if output_mode == "per_scout_zip":
+            zip_name = _safe_zip_name(request.form.get("outputName", "scout_awards.zip"))
+            zip_path = tmpdir_path / zip_name
+            with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+                for i, row in enumerate(rows, start=1):
+                    scout = _safe_base_name(row.get("Scout Name", "scout"))
+                    award = _safe_base_name(row.get("Award Name", "award"))
+                    file_stem = f"{i:03d}_{scout}_{award}"
+                    row_csv = tmpdir_path / f"{file_stem}.csv"
+                    row_pdf = tmpdir_path / f"{file_stem}.pdf"
+                    with row_csv.open("w", newline="", encoding="utf-8") as f:
+                        writer = csv.DictWriter(f, fieldnames=REQUIRED_HEADERS)
+                        writer.writeheader()
+                        writer.writerow({k: row.get(k, "") for k in REQUIRED_HEADERS})
+                    fill_certificates(
+                        csv_path=row_csv,
+                        output_path=row_pdf,
+                        template_path=TEMPLATE_PATH,
+                        shift_left_inch=shift_left,
+                        shift_down_inch=shift_down,
+                        font_name=font_name,
+                        script_font_name=script_font_name,
+                        font_size=font_size,
+                        script_font_size=script_font_size,
+                        font_file=font_file,
+                        script_font_file=script_font_file,
+                    )
+                    zf.write(row_pdf, arcname=row_pdf.name)
+
+            return send_file(
+                zip_path,
+                as_attachment=True,
+                download_name=zip_name,
+                mimetype="application/zip",
+            )
+
+        out_path = tmpdir_path / output_name
         fill_certificates(
             csv_path=csv_path,
             output_path=out_path,

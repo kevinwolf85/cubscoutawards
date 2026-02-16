@@ -27,6 +27,10 @@ cubscout-awards --csv /path/to/awards.csv --output /path/to/filled_awards.pdf
 - `CERT_TEMPLATE_PATH` overrides the server template.
 - `--template` overrides the CLI template.
 - For local installs, use editable mode (`pip install -e .`) so `assets/` files remain available.
+- UI supports CSV preflight validation and output modes (`combined_pdf`, `per_scout_zip`).
+- Backend applies per-IP rate limiting:
+  - `RATE_LIMIT_GENERATE_PER_MINUTE` (default `12`)
+  - `RATE_LIMIT_VALIDATE_PER_MINUTE` (default `30`)
 - CI workflow: `.github/workflows/ci.yml` runs install + smoke checks.
 - Deploy workflow: `.github/workflows/deploy-cloud-run.yml` deploys to Cloud Run on `main` when required GitHub Variables/Secrets are set.
 - Package publish workflow: `.github/workflows/publish-ghcr.yml` publishes `ghcr.io/<owner>/cubscoutawards` on pushes to `main`.

@@ -3,7 +3,9 @@ const csvName = document.getElementById("csvName");
 const status = document.getElementById("status");
 const livePreview = document.getElementById("livePreview");
 const downloadPanel = document.getElementById("downloadPanel");
+const validationPanel = document.getElementById("validationPanel");
 const generateBtn = document.getElementById("generateBtn");
+const validateBtn = document.getElementById("validateBtn");
 const fontSample = document.getElementById("fontSample");
 const scriptSample = document.getElementById("scriptSample");
 
@@ -15,6 +17,7 @@ const fields = {
   fontSize: document.getElementById("fontSize"),
   scriptFontSize: document.getElementById("scriptFontSize"),
   outputName: document.getElementById("outputName"),
+  outputMode: document.getElementById("outputMode"),
 };
 
 const fontPreviewMap = {
@@ -71,6 +74,7 @@ function gatherPayload() {
     fontSize: fields.fontSize.value,
     scriptFontSize: fields.scriptFontSize.value,
     outputName: fields.outputName.value,
+    outputMode: fields.outputMode.value,
   };
 }
 
@@ -182,6 +186,82 @@ function renderLivePreview() {
   `;
 }
 
+function renderValidationReport(report) {
+  if (!report) {
+    validationPanel.innerHTML = `<div class="placeholder">Run CSV validation to see row-level checks.</div>`;
+    return;
+  }
+
+  const errors = report.errors || [];
+  const warnings = report.warnings || [];
+  const summaryClass = errors.length ? "error" : warnings.length ? "warn" : "success";
+  const esc = (value) =>
+    String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll("\"", "&quot;")
+      .replaceAll("'", "&#39;");
+  const renderList = (title, items) => {
+    if (!items.length) return "";
+    return `
+      <div class="validation-block">
+        <strong>${esc(title)}</strong>
+        <ul>
+          ${items.map((item) => `<li>${esc(item)}</li>`).join("")}
+        </ul>
+      </div>
+    `;
+  };
+
+  validationPanel.innerHTML = `
+    <div class="validation-summary ${summaryClass}">
+      Rows: ${report.row_count} • Headers: ${report.header_count} • Errors: ${errors.length} • Warnings: ${warnings.length}
+    </div>
+    ${renderList("Errors", errors)}
+    ${renderList("Warnings", warnings)}
+  `;
+}
+
+async function validateCsv() {
+  const file = csvFile.files[0];
+  if (!file) {
+    setStatus("Please select a CSV file.", "error");
+    return;
+  }
+
+  validateBtn.disabled = true;
+  setStatus("Validating CSV...", "info");
+  const formData = new FormData();
+  formData.append("csv", file);
+
+  try {
+    const response = await fetch("/validate-csv", { method: "POST", body: formData });
+    const report = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(report.error || "CSV validation failed.");
+    }
+    renderValidationReport(report);
+    if (report.errors?.length) {
+      setStatus(`Validation found ${report.errors.length} error(s).`, "error");
+    } else if (report.warnings?.length) {
+      setStatus(`Validation passed with ${report.warnings.length} warning(s).`, "warn");
+    } else {
+      setStatus("Validation passed with no issues.", "success");
+    }
+  } catch (err) {
+    setStatus(err.message, "error");
+  } finally {
+    validateBtn.disabled = false;
+  }
+}
+
+function downloadNameFromResponse(response, fallbackName) {
+  const header = response.headers.get("Content-Disposition") || "";
+  const match = header.match(/filename=\"?([^\";]+)\"?/i);
+  return match ? match[1] : fallbackName;
+}
+
 async function generatePdf() {
   const file = csvFile.files[0];
   if (!file) {
@@ -199,9 +279,10 @@ async function generatePdf() {
   formData.append("fontSize", payload.fontSize);
   formData.append("scriptFontSize", payload.scriptFontSize);
   formData.append("outputName", payload.outputName);
+  formData.append("outputMode", payload.outputMode);
 
   generateBtn.disabled = true;
-  setStatus("Generating PDF...", "info");
+  setStatus("Generating file...", "info");
 
   try {
     const response = await fetch("/generate", {
@@ -211,19 +292,27 @@ async function generatePdf() {
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
+      if (data.report) {
+        renderValidationReport(data.report);
+      }
       throw new Error(data.error || "Failed to generate PDF.");
     }
 
     const blob = await response.blob();
     const url = URL.createObjectURL(blob);
+    const fallbackName =
+      payload.outputMode === "per_scout_zip"
+        ? `${payload.outputName.replace(/\.pdf$/i, "") || "scout_awards"}.zip`
+        : payload.outputName;
+    const downloadName = downloadNameFromResponse(response, fallbackName);
     downloadPanel.innerHTML = `
       <div>
-        <strong>${payload.outputName}</strong>
+        <strong>${downloadName}</strong>
         <p style="margin: 6px 0; color: #64748b;">Ready to download.</p>
-        <a href="${url}" download="${payload.outputName}">Download PDF</a>
+        <a href="${url}" download="${downloadName}">Download File</a>
       </div>
     `;
-    setStatus("PDF generated successfully.", "success");
+    setStatus("File generated successfully.", "success");
   } catch (err) {
     setStatus(err.message, "error");
   } finally {
@@ -248,6 +337,8 @@ Object.values(fields).forEach((field) => {
 });
 
 generateBtn.addEventListener("click", generatePdf);
+validateBtn.addEventListener("click", validateCsv);
 
 setFontSample();
 renderLivePreview();
+renderValidationReport(null);

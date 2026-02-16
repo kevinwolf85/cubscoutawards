@@ -113,10 +113,19 @@
             <span>Output name</span>
             <input type="text" value="filled_awards.pdf" id="outputName" />
           </label>
+
+          <label class="field">
+            <span>Output mode</span>
+            <select id="outputMode">
+              <option value="combined_pdf">Combined PDF (all scouts)</option>
+              <option value="per_scout_zip">ZIP (one PDF per scout)</option>
+            </select>
+          </label>
         </div>
 
         <div class="actions">
-          <button class="primary" id="generateBtn">Generate PDF</button>
+          <button class="ghost" id="validateBtn">Validate CSV</button>
+          <button class="primary" id="generateBtn">Generate File</button>
         </div>
 
         <div class="status" id="status"></div>
@@ -128,6 +137,9 @@
           <p>Live preview updates as you change settings. Generate when ready to download.</p>
         </div>
         <div class="output" id="outputArea">
+          <div class="download-panel" id="validationPanel">
+            <div class="placeholder">Run CSV validation to see row-level checks.</div>
+          </div>
           <div class="preview-sheet" id="livePreview"></div>
           <div class="download-panel" id="downloadPanel">
             <div class="placeholder">No PDF generated yet</div>

@@ -73,6 +73,13 @@ cubscout-awards \
 - You can set both a main font size and a separate script font size for signatures.
 - Additional Google Fonts are available in the UI and rendered in PDFs via bundled font files in `assets/fonts`.
 - For local install, use editable mode (`pip install -e .`) so template/font assets under `assets/` are available.
+- CSV preflight validation is available in the UI (`Validate CSV`) and via `POST /validate-csv`.
+- Output modes:
+  - `combined_pdf` (single merged PDF)
+  - `per_scout_zip` (ZIP containing one PDF per scout)
+- Basic per-IP rate limiting is enabled for public safety:
+  - `RATE_LIMIT_GENERATE_PER_MINUTE` (default `12`)
+  - `RATE_LIMIT_VALIDATE_PER_MINUTE` (default `30`)
 
 ## Deploy to Google Cloud Run (Public)
 1. Set your project:

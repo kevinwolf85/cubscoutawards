@@ -76,23 +76,44 @@ def _read_rows(csv_path: Path) -> list[dict[str, str]]:
 def _extract_field_positions(template_reader: PdfReader) -> dict[str, dict[str, object]]:
     page = template_reader.pages[0]
     annots_ref = page.get("/Annots")
-    if annots_ref is None:
-        raise ValueError("Template PDF has no annotations.")
-    annots = annots_ref.get_object()
     fields: dict[str, dict[str, object]] = {}
-    for annot_ref in annots:
-        annot = annot_ref.get_object()
-        name = annot.get("/T")
-        if not name:
-            continue
-        rect = annot.get("/Rect")
-        if not rect or len(rect) != 4:
-            continue
-        mk = annot.get("/MK")
-        rotation = 0
-        if mk and mk.get("/R") is not None:
-            rotation = int(mk.get("/R"))
-        fields[str(name)] = {"rect": rect, "rotation": rotation}
+
+    if annots_ref is not None:
+        annots = annots_ref.get_object()
+        for annot_ref in annots:
+            annot = annot_ref.get_object()
+            name = annot.get("/T")
+            if not name:
+                continue
+            rect = annot.get("/Rect")
+            if not rect or len(rect) != 4:
+                continue
+            mk = annot.get("/MK")
+            rotation = 0
+            if mk and mk.get("/R") is not None:
+                rotation = int(mk.get("/R"))
+            fields[str(name)] = {"rect": rect, "rotation": rotation}
+        if fields:
+            return fields
+
+    # Fallback for templates where fields live only in AcroForm /Fields.
+    acroform = template_reader.trailer["/Root"].get("/AcroForm")
+    if acroform:
+        acroform_obj = acroform.get_object()
+        for field_ref in acroform_obj.get("/Fields", []):
+            field = field_ref.get_object()
+            name = field.get("/T")
+            rect = field.get("/Rect")
+            if not name or not rect or len(rect) != 4:
+                continue
+            mk = field.get("/MK")
+            rotation = 0
+            if mk and mk.get("/R") is not None:
+                rotation = int(mk.get("/R"))
+            fields[str(name)] = {"rect": rect, "rotation": rotation}
+
+    if not fields:
+        raise ValueError("Template PDF has no detectable field positions.")
     return fields
 
 
@@ -303,6 +324,11 @@ def main() -> None:
         help="Font name for filled text.",
     )
     parser.add_argument(
+        "--font-file",
+        default=None,
+        help="Optional path to TTF for --font-name.",
+    )
+    parser.add_argument(
         "--script-font-file",
         default="/System/Library/Fonts/Supplemental/Apple Chancery.ttf",
         help="Path to a cursive/script TTF for Den Leader and Cubmaster.",
@@ -335,6 +361,7 @@ def main() -> None:
         script_font_name=script_font_name,
         font_size=args.font_size,
         script_font_size=args.script_font_size,
+        font_file=args.font_file,
         script_font_file=str(script_font_path) if script_font_name else None,
     )
 

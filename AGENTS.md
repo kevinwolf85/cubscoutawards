@@ -27,4 +27,5 @@ cubscout-awards --csv /path/to/awards.csv --output /path/to/filled_awards.pdf
 - `CERT_TEMPLATE_PATH` overrides the server template.
 - `--template` overrides the CLI template.
 - For local installs, use editable mode (`pip install -e .`) so `assets/` files remain available.
-- No formal tests.
+- CI workflow: `.github/workflows/ci.yml` runs install + smoke checks.
+- Deploy workflow: `.github/workflows/deploy-cloud-run.yml` deploys to Cloud Run on `main` when required GitHub Variables/Secrets are set.

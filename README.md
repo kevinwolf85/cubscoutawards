@@ -92,3 +92,22 @@ gcloud run deploy cubscoutawards \
   --allow-unauthenticated
 ```
 4. The command returns a public URL when deployment is complete.
+
+## GitHub Actions CI/CD
+This repo includes:
+- `.github/workflows/ci.yml`: install + smoke test on PRs/pushes
+- `.github/workflows/deploy-cloud-run.yml`: deploy to Cloud Run on `main` (and manual dispatch)
+
+### Required GitHub Variables
+- `GCP_PROJECT_ID`: Google Cloud project ID
+- `CLOUD_RUN_SERVICE`: Cloud Run service name (for example `cubscoutawards`)
+- `CLOUD_RUN_REGION`: optional, defaults to `us-central1`
+- `CLOUD_BUILD_SERVICE_ACCOUNT`: optional build service account email
+
+### Required GitHub Secrets
+- `GCP_WORKLOAD_IDENTITY_PROVIDER`: Workload Identity Provider resource path
+- `GCP_SERVICE_ACCOUNT`: service account email for deploy auth
+
+### Notes
+- Deploy workflow auto-skips when required auth/config values are missing.
+- You can manually run deploy from the Actions tab using `workflow_dispatch`.

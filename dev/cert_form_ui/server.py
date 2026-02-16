@@ -201,5 +201,10 @@ def index():
     return app.send_static_file("index.html")
 
 
+@app.get("/favicon.ico")
+def favicon():
+    return app.send_static_file("favicon.png")
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "5178")), debug=False)

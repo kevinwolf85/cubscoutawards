@@ -14,16 +14,20 @@ from threading import Lock
 from typing import Optional
 
 from flask import Flask, jsonify, request, send_file
+from pypdf import PdfReader
 
 UI_DIR = Path(__file__).resolve().parent
 REPO_ROOT = UI_DIR.parent.parent
 DEFAULT_TEMPLATE_PATH = REPO_ROOT / "assets" / "templates" / "cub_scout_award_certificate.pdf"
+DEFAULT_WOLF_RANK_TEMPLATE_PATH = REPO_ROOT / "assets" / "templates" / "wolf_rank_card.pdf"
 FONTS_DIR = REPO_ROOT / "assets" / "fonts"
 TEMPLATE_PATH = Path(os.environ.get("CERT_TEMPLATE_PATH", str(DEFAULT_TEMPLATE_PATH))).expanduser()
 RANK_TEMPLATE_PATHS = {
     "Lion": Path(os.environ.get("CERT_TEMPLATE_PATH_LION", str(DEFAULT_TEMPLATE_PATH))).expanduser(),
     "Tiger": Path(os.environ.get("CERT_TEMPLATE_PATH_TIGER", str(DEFAULT_TEMPLATE_PATH))).expanduser(),
-    "Wolf": Path(os.environ.get("CERT_TEMPLATE_PATH_WOLF", str(DEFAULT_TEMPLATE_PATH))).expanduser(),
+    "Wolf": Path(
+        os.environ.get("CERT_TEMPLATE_PATH_WOLF", str(DEFAULT_WOLF_RANK_TEMPLATE_PATH))
+    ).expanduser(),
     "Bear": Path(os.environ.get("CERT_TEMPLATE_PATH_BEAR", str(DEFAULT_TEMPLATE_PATH))).expanduser(),
     "Webelo": Path(os.environ.get("CERT_TEMPLATE_PATH_WEBELO", str(DEFAULT_TEMPLATE_PATH))).expanduser(),
     "Arrow of Light": Path(
@@ -33,6 +37,7 @@ RANK_TEMPLATE_PATHS = {
 
 try:
     from dev.fill_cub_scout_certs import fill_certificates
+    from dev.fill_cub_scout_rank_cards import fill_rank_cards
 except ModuleNotFoundError:
     # Fallback for direct script execution from source checkout.
     import sys
@@ -41,11 +46,12 @@ except ModuleNotFoundError:
     if str(DEV_DIR) not in sys.path:
         sys.path.insert(0, str(DEV_DIR))
     from fill_cub_scout_certs import fill_certificates  # type: ignore
+    from fill_cub_scout_rank_cards import fill_rank_cards  # type: ignore
 
 app = Flask(__name__, static_folder=str(UI_DIR), static_url_path="")
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5 MB CSV upload limit
 
-GENERATOR_HEADERS = ["Date", "Pack Number", "Scout Name", "Award Name", "Den Leader", "Cubmaster"]
+GENERATOR_HEADERS = ["Date", "Pack Number", "Den Number", "Scout Name", "Award Name", "Den Leader", "Cubmaster"]
 COMMON_REQUIRED_HEADERS = ["Date", "Pack Number", "Scout Name", "Den Leader", "Cubmaster"]
 ADVENTURE_REQUIRED_HEADERS = COMMON_REQUIRED_HEADERS + ["Award Name"]
 RANK_REQUIRED_HEADERS = COMMON_REQUIRED_HEADERS + ["Rank"]
@@ -155,6 +161,7 @@ class SlidingWindowLimiter:
 
 generate_limiter = SlidingWindowLimiter(GENERATE_PER_MINUTE)
 validate_limiter = SlidingWindowLimiter(VALIDATE_PER_MINUTE)
+_template_field_support_cache: dict[str, bool] = {}
 
 
 def _resolve_font_choice(choice_id: str, catalog: dict) -> tuple[Optional[str], Optional[str]]:
@@ -255,6 +262,32 @@ def _selected_template(workflow: str, selected_rank: str) -> Path:
     return TEMPLATE_PATH
 
 
+def _template_supports_field_fill(template_path: Path) -> bool:
+    key = str(template_path.resolve())
+    cached = _template_field_support_cache.get(key)
+    if cached is not None:
+        return cached
+
+    try:
+        reader = PdfReader(str(template_path))
+        page = reader.pages[0]
+        annots = page.get("/Annots")
+        if annots and len(annots.get_object()) > 0:
+            _template_field_support_cache[key] = True
+            return True
+        acroform = reader.trailer["/Root"].get("/AcroForm")
+        if acroform:
+            fields = acroform.get_object().get("/Fields", [])
+            supported = len(fields) > 0
+            _template_field_support_cache[key] = supported
+            return supported
+    except Exception:
+        pass
+
+    _template_field_support_cache[key] = False
+    return False
+
+
 def _normalize_rows_for_generator(
     rows: list[dict[str, str]], workflow: str, selected_rank: str
 ) -> list[dict[str, str]]:
@@ -269,6 +302,7 @@ def _normalize_rows_for_generator(
             {
                 "Date": (row.get("Date") or "").strip(),
                 "Pack Number": (row.get("Pack Number") or "").strip(),
+                "Den Number": (row.get("Den Number") or row.get("Den No.") or "").strip(),
                 "Scout Name": (row.get("Scout Name") or "").strip(),
                 "Award Name": award_name,
                 "Den Leader": (row.get("Den Leader") or "").strip(),
@@ -399,6 +433,8 @@ def generate_pdf():
     if not report["ok"]:
         return jsonify({"error": "CSV validation failed.", "report": report}), 400
     normalized_rows = _normalize_rows_for_generator(rows, workflow=workflow, selected_rank=selected_rank)
+    use_rank_layout = workflow == "ranks" and not _template_supports_field_fill(template_path)
+    fill_function = fill_rank_cards if use_rank_layout else fill_certificates
 
     font_name, font_file = _resolve_font_choice(font_choice, FONT_CHOICES)
     if not font_name:
@@ -429,7 +465,7 @@ def generate_pdf():
                         writer = csv.DictWriter(f, fieldnames=GENERATOR_HEADERS)
                         writer.writeheader()
                         writer.writerow({k: row.get(k, "") for k in GENERATOR_HEADERS})
-                    fill_certificates(
+                    fill_function(
                         csv_path=row_csv,
                         output_path=row_pdf,
                         template_path=template_path,
@@ -452,7 +488,7 @@ def generate_pdf():
             )
 
         out_path = tmpdir_path / output_name
-        fill_certificates(
+        fill_function(
             csv_path=csv_path,
             output_path=out_path,
             template_path=template_path,

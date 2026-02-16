@@ -5,6 +5,8 @@ import io
 import zipfile
 from pathlib import Path
 
+from pypdf import PdfReader
+
 from dev.cert_form_ui.server import app
 
 
@@ -104,6 +106,11 @@ def main() -> None:
         raise SystemExit(f"Rank PDF smoke test failed: content-type={rank_response.headers.get('Content-Type')}")
     if len(rank_response.data) < 2048:
         raise SystemExit(f"Rank PDF smoke test failed: output too small ({len(rank_response.data)} bytes)")
+    rank_text = "\n".join((p.extract_text() or "") for p in PdfReader(io.BytesIO(rank_response.data)).pages)
+    if "earned the rank of" not in rank_text:
+        raise SystemExit("Rank PDF smoke test failed: expected rank template text not found.")
+    if "for completing" in rank_text:
+        raise SystemExit("Rank PDF smoke test failed: adventure template text detected.")
 
     print("Smoke tests passed.")
 

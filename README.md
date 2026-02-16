@@ -4,11 +4,13 @@ Generate Cub Scout award certificates from a CSV and a fillable PDF template. In
 
 ## What's Included
 - `dev/fill_cub_scout_certs.py`: CSV -> filled PDF generator
+- `dev/fill_cub_scout_rank_cards.py`: CSV -> rendered rank-card PDF generator for non-fillable rank templates
 - `dev/cert_form_ui/`: Frontend + Flask backend
   - `index.html` (home), `adventures.html`, `ranks.html`
   - `styles.css`, `nav.js`, `app.js`
   - `server.py`
   - `cub_scout_award_template.csv`
+- `assets/templates/wolf_rank_card.pdf`: Wolf rank template (non-fillable)
 
 ## Requirements
 - Python 3.10+
@@ -50,13 +52,13 @@ Rank template currently available:
 - `dev/cert_form_ui/rank_template.csv`
   - Shared template for Lion, Tiger, Wolf, Bear, Webelo, and Arrow of Light.
 - `dev/cert_form_ui/wolf_rank_template.csv`
-  - Derived from visible placeholder labels in `/Users/kevinwolf/Downloads/34220(15)FillTempl-WOLF.pdf`.
-  - The Wolf PDF appears non-fillable (no AcroForm fields detected), so this CSV is for rank workflow planning/template prep.
+  - Wolf-focused sample CSV template.
   - Rank workflow accepts `Rank` (or `Award Name`) and maps it to generated output text.
 
 ## Template PDF
 The generator uses a fillable PDF template. The path is currently hardcoded in:
 - `assets/templates/cub_scout_award_certificate.pdf` (default)
+- `assets/templates/wolf_rank_card.pdf` (default for `Wolf` in rank workflow)
 
 You can override with:
 - `CERT_TEMPLATE_PATH` (web server env var)
@@ -69,6 +71,8 @@ Optional per-rank server template overrides:
 - `CERT_TEMPLATE_PATH_BEAR`
 - `CERT_TEMPLATE_PATH_WEBELO`
 - `CERT_TEMPLATE_PATH_ARROW_OF_LIGHT`
+
+When a selected rank template has no AcroForm fields, the server automatically falls back to coordinate-based rendering (`fill_rank_cards`).
 
 ## CLI Usage
 ```sh
@@ -102,6 +106,8 @@ cubscout-awards \
   - `combined_pdf` (single merged PDF)
   - `per_scout_zip` (ZIP containing one PDF per scout)
 - Ranks page uses the same controls as Adventures (CSV upload, fonts, shifts, validation, output modes) plus a `Rank` selector that drives template selection.
+- Wolf rank rendering uses tuned coordinates for `Den Number`, `Pack Number`, `Date`, `Scout Name`, `Den Leader`, and `Cubmaster`.
+- On Wolf rank cards, signature text size is capped for readability to avoid collisions with static labels.
 - Basic per-IP rate limiting is enabled for public safety:
   - `RATE_LIMIT_GENERATE_PER_MINUTE` (default `12`)
   - `RATE_LIMIT_VALIDATE_PER_MINUTE` (default `30`)

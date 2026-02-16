@@ -1,0 +1,5 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+.venv/
+dev/cert_form_ui/_smoke_output.pdf

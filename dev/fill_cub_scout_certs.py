@@ -14,8 +14,8 @@ import argparse
 import csv
 import io
 import math
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 from pypdf import PdfReader, PdfWriter, Transformation
 from reportlab.pdfbase import pdfmetrics
@@ -23,7 +23,9 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
 
-DEFAULT_TEMPLATE = "/Users/kevinwolf/Downloads/33006(18)CS Adventure-FillableCert.pdf"
+DEFAULT_TEMPLATE = str(
+    Path(__file__).resolve().parents[1] / "assets" / "templates" / "cub_scout_award_certificate.pdf"
+)
 FIELDS_PER_PAGE = 8
 
 
@@ -206,6 +208,9 @@ def fill_certificates(
     font_file: str | None = None,
     script_font_file: str | None = None,
 ) -> None:
+    if not template_path.exists():
+        raise FileNotFoundError(f"Template PDF not found: {template_path}")
+
     rows = _read_rows(csv_path)
     if not rows:
         raise ValueError("CSV has no data rows.")

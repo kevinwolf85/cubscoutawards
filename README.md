@@ -11,7 +11,7 @@ Generate Cub Scout award certificates from a CSV and a fillable PDF template. In
 
 ## Requirements
 - Python 3
-- Packages: `pypdf`, `reportlab`, `flask`
+- Packages: `pypdf`, `reportlab`, `flask`, `gunicorn`
 
 ## Setup (Local)
 ```sh
@@ -36,10 +36,11 @@ Download the template from the UI or use:
 
 ## Template PDF
 The generator uses a fillable PDF template. The path is currently hardcoded in:
-- `dev/cert_form_ui/server.py`
-- `dev/fill_cub_scout_certs.py` (CLI default)
+- `assets/templates/cub_scout_award_certificate.pdf` (default)
 
-Update those paths if your template lives elsewhere.
+You can override with:
+- `CERT_TEMPLATE_PATH` (web server env var)
+- `--template` (CLI flag)
 
 ## CLI Usage
 ```sh
@@ -54,3 +55,22 @@ python /Users/kevinwolf/cubscoutawards/dev/fill_cub_scout_certs.py \
 - Dates are normalized to `MM/DD/YYYY`.
 - Fields are centered inside their boxes.
 - Den Leader and Cubmaster use a cursive font when available.
+
+## Deploy to Google Cloud Run (Public)
+1. Set your project:
+```sh
+gcloud config set project YOUR_PROJECT_ID
+```
+2. Enable required services:
+```sh
+gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com
+```
+3. Deploy:
+```sh
+gcloud run deploy cubscoutawards \
+  --source . \
+  --region us-central1 \
+  --platform managed \
+  --allow-unauthenticated
+```
+4. The command returns a public URL when deployment is complete.

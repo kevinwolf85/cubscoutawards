@@ -22,9 +22,9 @@ CARD_ANCHORS = [
 
 # Coordinates are tuned against 34220(15)FillTempl-WOLF.pdf (landscape sheet of 8 cards)
 FIELD_LAYOUT = {
-    "den_number": {"x": 40.0, "y": 97.0, "width": 46.0, "height": 9.0, "size": 7.5},
-    "pack_number": {"x": 66.0, "y": 109.0, "width": 50.0, "height": 9.0, "size": 7.5},
-    "date": {"x": 76.0, "y": 123.0, "width": 84.0, "height": 9.0, "size": 7.0},
+    "den_number": {"x": 40.0, "y": 95.0, "width": 46.0, "height": 9.0, "size": 7.5},
+    "pack_number": {"x": 66.0, "y": 107.0, "width": 50.0, "height": 9.0, "size": 7.5},
+    "date": {"x": 76.0, "y": 121.0, "width": 84.0, "height": 9.0, "size": 7.0},
     "name": {"x": 124.0, "y": -8.0, "width": 105.0, "height": 16.0, "size": 10.5, "max_size": 16.0},
     "den_leader": {"x": 72.0, "y": 20.5, "width": 106.0, "height": 10.0, "size": 8.0, "max_size": 9.0},
     "cubmaster": {"x": 89.0, "y": 5.5, "width": 106.0, "height": 10.0, "size": 8.0, "max_size": 9.0},

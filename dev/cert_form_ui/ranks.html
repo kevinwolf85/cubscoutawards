@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cub Scout Rank Builder</title>
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&family=Archivo:wght@400;600&family=Bangers&family=Cabin+Sketch:wght@400;700&family=Caveat:wght@400;700&family=Crimson+Pro:wght@400;700&family=Dancing+Script:wght@400;700&family=DM+Serif+Display&family=Fira+Sans:wght@400;600&family=IBM+Plex+Serif:wght@400;600&family=Kanit:wght@400;600&family=Kaushan+Script&family=Lilita+One&family=Lora:wght@400;600&family=Merriweather:wght@400;700&family=Montserrat:wght@400;600&family=Oswald:wght@400;600&family=Patrick+Hand&family=Permanent+Marker&family=Righteous&family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="bg"></div>
+    <header class="topbar">
+      <a class="brand" href="/">Cub Scout Awards</a>
+      <div class="menu-wrap">
+        <button
+          type="button"
+          class="menu-toggle"
+          id="menuToggle"
+          aria-expanded="false"
+          aria-controls="menuPanel"
+          aria-label="Open navigation menu"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <nav class="menu-panel" id="menuPanel" hidden>
+          <a href="/">Home</a>
+          <a href="/adventures">Adventures</a>
+          <a href="/ranks">Ranks</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page">
+      <header class="hero">
+        <div class="badge">Ranks</div>
+        <h1>Rank Workflow</h1>
+        <p>
+          Work on rank templates in a dedicated page that mirrors the Adventure workflow
+          layout. Start with rank selection and template downloads.
+        </p>
+      </header>
+
+      <section class="card">
+        <div class="card-header">
+          <h2>Inputs</h2>
+          <p>Select a rank to view template status and download available CSV templates.</p>
+        </div>
+
+        <div class="grid">
+          <label class="field">
+            <span>Rank</span>
+            <select id="rankSelect">
+              <option value="Lion">Lion</option>
+              <option value="Tiger">Tiger</option>
+              <option value="Wolf" selected>Wolf</option>
+              <option value="Bear">Bear</option>
+              <option value="Webelo">Webelo</option>
+              <option value="Arrow of Light">Arrow of Light</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Current Wolf template</span>
+            <a class="template-link" href="/wolf_rank_template.csv" download>
+              Download Wolf Rank CSV Template
+            </a>
+          </label>
+
+          <label class="field">
+            <span>Adventure workflow</span>
+            <a class="template-link" href="/adventures">Open Adventures Generator</a>
+          </label>
+        </div>
+
+        <div class="rank-grid" id="rankGrid">
+          <button type="button" class="rank-chip" data-rank="Lion">Lion</button>
+          <button type="button" class="rank-chip" data-rank="Tiger">Tiger</button>
+          <button type="button" class="rank-chip active" data-rank="Wolf">Wolf</button>
+          <button type="button" class="rank-chip" data-rank="Bear">Bear</button>
+          <button type="button" class="rank-chip" data-rank="Webelo">Webelo</button>
+          <button type="button" class="rank-chip" data-rank="Arrow of Light">Arrow of Light</button>
+        </div>
+      </section>
+
+      <section class="card outline">
+        <div class="card-header">
+          <h2>Output</h2>
+          <p>Selected rank details and template readiness.</p>
+        </div>
+        <div class="output">
+          <div class="download-panel" id="rankSummary">
+            <strong>Wolf</strong>
+            <p style="margin: 6px 0; color: #64748b;">Wolf CSV template is available now.</p>
+            <a id="rankTemplateLink" href="/wolf_rank_template.csv" download>Download Wolf Rank CSV Template</a>
+            <p id="rankTemplateStatus" style="margin: 8px 0 0; color: #64748b; font-size: 0.85rem;">
+              Source PDF appears non-fillable, so template is derived from visible placeholders.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="nav.js"></script>
+    <script src="ranks.js"></script>
+  </body>
+</html>

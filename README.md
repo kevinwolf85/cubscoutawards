@@ -5,7 +5,8 @@ Generate Cub Scout award certificates from a CSV and a fillable PDF template. In
 ## What's Included
 - `dev/fill_cub_scout_certs.py`: CSV -> filled PDF generator
 - `dev/cert_form_ui/`: Frontend + Flask backend
-  - `index.html`, `styles.css`, `app.js`
+  - `index.html` (home), `adventures.html`, `ranks.html`
+  - `styles.css`, `nav.js`, `app.js`, `ranks.js`
   - `server.py`
   - `cub_scout_award_template.csv`
 
@@ -24,6 +25,13 @@ pip install -e .
 cubscout-awards-web
 ```
 Open `http://localhost:5178`.
+Pages:
+- Home: `/`
+- Adventures: `/adventures`
+- Ranks: `/ranks`
+
+Navigation:
+- A hamburger menu is available at the top-right of each page to switch between Home, Adventures, and Ranks.
 
 Alternative (without package entrypoint):
 ```sh

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Cub Scout Certificate Generator</title>
+    <title>Cub Scout Awards</title>
     <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -16,166 +16,61 @@
   </head>
   <body>
     <div class="bg"></div>
+    <header class="topbar">
+      <a class="brand" href="/">Cub Scout Awards</a>
+      <div class="menu-wrap">
+        <button
+          type="button"
+          class="menu-toggle"
+          id="menuToggle"
+          aria-expanded="false"
+          aria-controls="menuPanel"
+          aria-label="Open navigation menu"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <nav class="menu-panel" id="menuPanel" hidden>
+          <a href="/">Home</a>
+          <a href="/adventures">Adventures</a>
+          <a href="/ranks">Ranks</a>
+        </nav>
+      </div>
+    </header>
+
     <main class="page">
-      <header class="hero">
+      <section class="hero">
         <div class="badge">Pack Ops</div>
-        <h1>Certificate Generator</h1>
+        <h1>Cub Scout Awards Hub</h1>
         <p>
-          Upload a CSV, choose fonts, and generate print-ready Cub Scout award
-          certificates in seconds.
+          Choose your workflow: generate Adventure awards now, or jump into Rank templates
+          and rank-specific setup.
         </p>
-        <div class="actions hero-actions">
-          <a class="primary-link" href="#rank-section">Go To Rank Section</a>
-        </div>
-      </header>
+      </section>
 
       <section class="card">
         <div class="card-header">
-          <h2>Inputs</h2>
-          <p>CSV headers: Date, Pack Number, Scout Name, Award Name, Den Leader, Cubmaster.</p>
+          <h2>Choose A Page</h2>
+          <p>Use the quick links below or the hamburger menu in the top-right corner.</p>
         </div>
 
-        <div class="grid">
-          <label class="field">
-            <span>CSV file</span>
-            <div class="dropzone" id="csvDrop">
-              <input type="file" id="csvFile" accept=".csv" />
-              <div>
-                <strong>Drag & drop</strong> or click to browse
-                <small id="csvName">No file selected</small>
-              </div>
-            </div>
-            <a class="template-link" href="/cub_scout_award_template.csv" download>
-              Download template CSV
-            </a>
-          </label>
+        <div class="home-grid">
+          <article class="home-option">
+            <h3>Adventures</h3>
+            <p>CSV upload, live preview, font controls, validation, and PDF/ZIP output.</p>
+            <a class="home-link" href="/adventures">Open Adventures Page</a>
+          </article>
 
-          <label class="field">
-            <span>Font (all fields)</span>
-            <select id="fontName">
-              <option value="Helvetica">Helvetica</option>
-              <option value="TimesRoman">Times Roman</option>
-              <option value="Courier">Courier</option>
-              <option value="Alegreya">Alegreya (Google Fonts)</option>
-              <option value="Archivo">Archivo (Google Fonts)</option>
-              <option value="FiraSans">Fira Sans (Google Fonts)</option>
-              <option value="Bangers">Bangers (Google Fonts)</option>
-              <option value="CabinSketch">Cabin Sketch (Google Fonts)</option>
-              <option value="LilitaOne">Lilita One (Google Fonts)</option>
-              <option value="Righteous">Righteous (Google Fonts)</option>
-              <option value="Oswald">Oswald (Google Fonts)</option>
-              <option value="Montserrat">Montserrat (Google Fonts)</option>
-              <option value="Kanit">Kanit (Google Fonts)</option>
-              <option value="Lora">Lora (Google Fonts)</option>
-              <option value="CrimsonPro">Crimson Pro (Google Fonts)</option>
-              <option value="IBMPlexSerif">IBM Plex Serif (Google Fonts)</option>
-              <option value="Merriweather">Merriweather (Google Fonts)</option>
-              <option value="DejaVuSerif">DejaVu Serif</option>
-              <option value="DejaVuSans">DejaVu Sans</option>
-              <option value="DejaVuSansMono">DejaVu Sans Mono</option>
-            </select>
-            <div class="font-sample" id="fontSample">Piney Knotts · Badge to the Bone</div>
-          </label>
-
-          <label class="field">
-            <span>Den Leader / Cubmaster (cursive)</span>
-            <select id="scriptFont">
-              <option value="PatrickHand">Patrick Hand (Google Fonts)</option>
-              <option value="PermanentMarker">Permanent Marker (Google Fonts)</option>
-              <option value="DancingScript">Dancing Script (Google Fonts)</option>
-              <option value="Caveat">Caveat (Google Fonts)</option>
-              <option value="KaushanScript">Kaushan Script (Google Fonts)</option>
-              <option value="DejaVuSerifItalic">DejaVu Serif Italic</option>
-              <option value="DejaVuSansOblique">DejaVu Sans Oblique</option>
-              <option value="None">Disable</option>
-            </select>
-            <div class="font-sample script" id="scriptSample">Ranger Barkley · Twig Timberly</div>
-          </label>
-
-          <label class="field">
-            <span>Shift toward barcode (inches)</span>
-            <input type="number" step="0.1" value="0.5" id="shiftLeft" />
-          </label>
-
-          <label class="field">
-            <span>Shift down (inches)</span>
-            <input type="number" step="0.1" value="0.5" id="shiftDown" />
-          </label>
-
-          <label class="field">
-            <span>Font size</span>
-            <input type="number" step="0.5" value="14" id="fontSize" />
-          </label>
-
-          <label class="field">
-            <span>Script font size</span>
-            <input type="number" step="0.5" value="24" id="scriptFontSize" />
-          </label>
-
-          <label class="field">
-            <span>Output name</span>
-            <input type="text" value="filled_awards.pdf" id="outputName" />
-          </label>
-
-          <label class="field">
-            <span>Output mode</span>
-            <select id="outputMode">
-              <option value="combined_pdf">All scouts (one combined PDF)</option>
-              <option value="per_scout_zip">Batched by scout (ZIP)</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="actions">
-          <button class="ghost" id="validateBtn">Validate CSV</button>
-          <button class="primary" id="generateBtn">Generate File</button>
-        </div>
-
-        <div class="status" id="status"></div>
-      </section>
-
-      <section class="card outline">
-        <div class="card-header">
-          <h2>Output</h2>
-          <p>Live preview updates as you change settings. Generate when ready to download.</p>
-        </div>
-        <div class="output" id="outputArea">
-          <div class="download-panel" id="validationPanel">
-            <div class="placeholder">Run CSV validation to see row-level checks.</div>
-          </div>
-          <div class="preview-sheet" id="livePreview"></div>
-          <div class="download-panel" id="downloadPanel">
-            <div class="placeholder">No PDF generated yet</div>
-          </div>
-        </div>
-      </section>
-
-      <section class="card outline" id="rank-section">
-        <div class="card-header">
-          <h2>Rank Section</h2>
-          <p>Rank tracks: Lion, Tiger, Wolf, Bear, Webelo, Arrow of Light.</p>
-        </div>
-        <div class="rank-grid">
-          <div class="rank-chip">Lion</div>
-          <div class="rank-chip">Tiger</div>
-          <div class="rank-chip active">Wolf</div>
-          <div class="rank-chip">Bear</div>
-          <div class="rank-chip">Webelo</div>
-          <div class="rank-chip">Arrow of Light</div>
-        </div>
-        <div class="download-panel">
-          <strong>Wolf Rank Template (CSV)</strong>
-          <p style="margin: 6px 0; color: #64748b;">
-            Based on detected placeholders in the Wolf rank card PDF.
-          </p>
-          <a href="/wolf_rank_template.csv" download>Download Wolf Rank CSV Template</a>
-          <p style="margin: 8px 0 0; color: #64748b; font-size: 0.85rem;">
-            Note: the provided Wolf card PDF appears non-fillable (no AcroForm fields).
-          </p>
+          <article class="home-option">
+            <h3>Ranks</h3>
+            <p>Rank-specific templates and workflow setup for Lion through Arrow of Light.</p>
+            <a class="home-link" href="/ranks">Open Ranks Page</a>
+          </article>
         </div>
       </section>
     </main>
 
-    <script src="app.js"></script>
+    <script src="nav.js"></script>
   </body>
 </html>

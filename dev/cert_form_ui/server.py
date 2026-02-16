@@ -399,6 +399,16 @@ def index():
     return app.send_static_file("index.html")
 
 
+@app.get("/adventures")
+def adventures_page():
+    return app.send_static_file("adventures.html")
+
+
+@app.get("/ranks")
+def ranks_page():
+    return app.send_static_file("ranks.html")
+
+
 @app.get("/favicon.ico")
 def favicon():
     return app.send_static_file("favicon.png")

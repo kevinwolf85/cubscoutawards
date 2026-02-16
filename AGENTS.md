@@ -29,3 +29,4 @@ cubscout-awards --csv /path/to/awards.csv --output /path/to/filled_awards.pdf
 - For local installs, use editable mode (`pip install -e .`) so `assets/` files remain available.
 - CI workflow: `.github/workflows/ci.yml` runs install + smoke checks.
 - Deploy workflow: `.github/workflows/deploy-cloud-run.yml` deploys to Cloud Run on `main` when required GitHub Variables/Secrets are set.
+- Package publish workflow: `.github/workflows/publish-ghcr.yml` publishes `ghcr.io/<owner>/cubscoutawards` on pushes to `main`.

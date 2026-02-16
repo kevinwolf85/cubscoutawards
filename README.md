@@ -97,6 +97,7 @@ gcloud run deploy cubscoutawards \
 This repo includes:
 - `.github/workflows/ci.yml`: install + smoke test on PRs/pushes
 - `.github/workflows/deploy-cloud-run.yml`: deploy to Cloud Run on `main` (and manual dispatch)
+- `.github/workflows/publish-ghcr.yml`: publish container image to GitHub Packages (GHCR)
 
 ### Required GitHub Variables
 - `GCP_PROJECT_ID`: Google Cloud project ID
@@ -111,3 +112,4 @@ This repo includes:
 ### Notes
 - Deploy workflow auto-skips when required auth/config values are missing.
 - You can manually run deploy from the Actions tab using `workflow_dispatch`.
+- GHCR images are published to `ghcr.io/<owner>/cubscoutawards` on pushes to `main`.

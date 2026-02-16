@@ -103,7 +103,7 @@ cubscout-awards \
 
 ## Notes
 - Dates are normalized to `MM/DD/YYYY`.
-- Fields are centered inside their boxes.
+- Adventure fields are centered inside their boxes.
 - Den Leader and Cubmaster use a cursive font when available.
 - You can set both a main font size and a separate script font size for signatures.
 - Additional Google Fonts are available in the UI and rendered in PDFs via bundled font files in `assets/fonts`.
@@ -113,7 +113,7 @@ cubscout-awards \
   - `combined_pdf` (single merged PDF)
   - `per_scout_zip` (ZIP containing one PDF per scout)
 - Ranks page uses the same controls as Adventures (CSV upload, fonts, shifts, validation, output modes) plus a `Rank` selector that drives template selection.
-- Wolf rank rendering uses tuned coordinates and centered text boxes for `Den Number`, `Pack Number`, `Date`, `Scout Name`, `Den Leader`, and `Cubmaster` so placement behavior matches Adventures more closely.
+- Wolf rank rendering uses tuned coordinates with baseline-anchored line fields (`Den Number`, `Pack Number`, `Date`) and boxed centering for `Scout Name`, `Den Leader`, and `Cubmaster`.
 - On Wolf rank cards, signature text size is capped for readability to avoid collisions with static labels.
 - Rank shift controls (`Shift Left`, `Shift Down`) now follow the same display-direction mapping as Adventures.
 - Basic per-IP rate limiting is enabled for public safety:

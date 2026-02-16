@@ -1,6 +1,6 @@
 # Cub Scout Awards
 
-Generate Cub Scout award certificates from a CSV and a fillable PDF template. Includes a local web UI for CSV upload, font selection, and PDF generation.
+Generate Cub Scout award certificates from a CSV and a fillable PDF template. Includes a local web UI for CSV upload, live preview, font selection, and PDF generation.
 
 ## What's Included
 - `dev/fill_cub_scout_certs.py`: CSV -> filled PDF generator
@@ -55,6 +55,7 @@ python /Users/kevinwolf/cubscoutawards/dev/fill_cub_scout_certs.py \
 - Dates are normalized to `MM/DD/YYYY`.
 - Fields are centered inside their boxes.
 - Den Leader and Cubmaster use a cursive font when available.
+- You can set both a main font size and a separate script font size for signatures.
 - Additional Google Fonts are available in the UI and rendered in PDFs via bundled font files in `assets/fonts`.
 
 ## Deploy to Google Cloud Run (Public)

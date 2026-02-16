@@ -93,6 +93,11 @@
           </label>
 
           <label class="field">
+            <span>Script font size</span>
+            <input type="number" step="0.5" value="9" id="scriptFontSize" />
+          </label>
+
+          <label class="field">
             <span>Output name</span>
             <input type="text" value="filled_awards.pdf" id="outputName" />
           </label>
@@ -108,10 +113,13 @@
       <section class="card outline">
         <div class="card-header">
           <h2>Output</h2>
-          <p>Generated file will appear here once the backend is connected.</p>
+          <p>Live preview updates as you change settings. Generate when ready to download.</p>
         </div>
         <div class="output" id="outputArea">
-          <div class="placeholder">No output yet</div>
+          <div class="preview-sheet" id="livePreview"></div>
+          <div class="download-panel" id="downloadPanel">
+            <div class="placeholder">No PDF generated yet</div>
+          </div>
         </div>
       </section>
     </main>

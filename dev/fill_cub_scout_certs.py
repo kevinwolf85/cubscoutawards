@@ -156,6 +156,7 @@ def _render_overlay(
     font_name: str,
     script_font_name: str | None,
     base_font_size: float,
+    script_font_size: float | None,
     shift_x: float,
 ) -> bytes:
     buffer = io.BytesIO()
@@ -165,8 +166,10 @@ def _render_overlay(
         if not info:
             continue
         use_font = font_name
+        use_size = base_font_size
         if script_font_name and field_name.startswith(("Den Leader", "Cubmaster")):
             use_font = script_font_name
+            use_size = script_font_size if script_font_size is not None else base_font_size
         align = "center"
         _draw_text(
             c,
@@ -174,7 +177,7 @@ def _render_overlay(
             int(info["rotation"]),
             value,
             use_font,
-            base_font_size,
+            use_size,
             align,
             shift_x,
         )
@@ -205,6 +208,7 @@ def fill_certificates(
     font_name: str,
     script_font_name: str | None,
     font_size: float,
+    script_font_size: float | None = None,
     font_file: str | None = None,
     script_font_file: str | None = None,
 ) -> None:
@@ -248,6 +252,7 @@ def fill_certificates(
             font_name,
             script_font_name,
             font_size,
+            script_font_size,
             0.0,
         )
         overlay_page = PdfReader(io.BytesIO(overlay_pdf)).pages[0]
@@ -307,6 +312,12 @@ def main() -> None:
         default="AppleChancery",
         help="Registered font name for the script font.",
     )
+    parser.add_argument(
+        "--script-font-size",
+        type=float,
+        default=None,
+        help="Optional font size override for Den Leader/Cubmaster fields.",
+    )
     args = parser.parse_args()
 
     script_font_name = None
@@ -323,6 +334,7 @@ def main() -> None:
         font_name=args.font_name,
         script_font_name=script_font_name,
         font_size=args.font_size,
+        script_font_size=args.script_font_size,
         script_font_file=str(script_font_path) if script_font_name else None,
     )
 

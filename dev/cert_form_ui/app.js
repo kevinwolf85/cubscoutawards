@@ -1,7 +1,8 @@
 const csvFile = document.getElementById("csvFile");
 const csvName = document.getElementById("csvName");
 const status = document.getElementById("status");
-const outputArea = document.getElementById("outputArea");
+const livePreview = document.getElementById("livePreview");
+const downloadPanel = document.getElementById("downloadPanel");
 const generateBtn = document.getElementById("generateBtn");
 const fontSample = document.getElementById("fontSample");
 const scriptSample = document.getElementById("scriptSample");
@@ -12,6 +13,7 @@ const fields = {
   shiftLeft: document.getElementById("shiftLeft"),
   shiftDown: document.getElementById("shiftDown"),
   fontSize: document.getElementById("fontSize"),
+  scriptFontSize: document.getElementById("scriptFontSize"),
   outputName: document.getElementById("outputName"),
 };
 
@@ -57,8 +59,108 @@ function gatherPayload() {
     shiftLeft: fields.shiftLeft.value,
     shiftDown: fields.shiftDown.value,
     fontSize: fields.fontSize.value,
+    scriptFontSize: fields.scriptFontSize.value,
     outputName: fields.outputName.value,
   };
+}
+
+const defaultPreview = {
+  date: "02/22/2026",
+  pack: "Pack 202",
+  scout: "Piney Knotts",
+  award: "Badge to the Bone",
+  denLeader: "Ranger Barkley",
+  cubmaster: "Twig Timberly",
+};
+
+let previewData = { ...defaultPreview };
+
+function parseCsvRows(text) {
+  const lines = text.split(/\r?\n/).filter((line) => line.trim());
+  if (lines.length < 2) return [];
+  const parseLine = (line) =>
+    line
+      .split(/,(?=(?:(?:[^\"]*\"){2})*[^\"]*$)/)
+      .map((part) => part.trim().replace(/^\"|\"$/g, ""));
+  const headers = parseLine(lines[0]);
+  return lines.slice(1).map((line) => {
+    const values = parseLine(line);
+    const row = {};
+    headers.forEach((header, i) => {
+      row[header] = values[i] || "";
+    });
+    return row;
+  });
+}
+
+function updatePreviewFromCsv(file) {
+  if (!file) {
+    previewData = { ...defaultPreview };
+    renderLivePreview();
+    return;
+  }
+  file
+    .text()
+    .then((text) => {
+      const rows = parseCsvRows(text);
+      if (!rows.length) {
+        previewData = { ...defaultPreview };
+        renderLivePreview();
+        return;
+      }
+      const row = rows[0];
+      previewData = {
+        date: row["Date"] || defaultPreview.date,
+        pack: row["Pack Number"] || defaultPreview.pack,
+        scout: row["Scout Name"] || defaultPreview.scout,
+        award: row["Award Name"] || defaultPreview.award,
+        denLeader: row["Den Leader"] || defaultPreview.denLeader,
+        cubmaster: row["Cubmaster"] || defaultPreview.cubmaster,
+      };
+      renderLivePreview();
+    })
+    .catch(() => {
+      previewData = { ...defaultPreview };
+      renderLivePreview();
+    });
+}
+
+function renderLivePreview() {
+  const payload = gatherPayload();
+  const regularFamily = fontPreviewMap[payload.fontName] || "inherit";
+  const scriptFamily =
+    payload.scriptFont === "None"
+      ? regularFamily
+      : fontPreviewMap[payload.scriptFont] || "inherit";
+  const regularSize = Number.parseFloat(payload.fontSize) || 9;
+  const scriptSize = Number.parseFloat(payload.scriptFontSize) || regularSize;
+  livePreview.innerHTML = `
+    <div class="preview-meta">
+      <span>${previewData.date}</span>
+      <span>${previewData.pack}</span>
+    </div>
+    <h3 class="preview-title">Cub Scout Award Certificate</h3>
+    <p class="preview-line" style="font-family:${regularFamily};font-size:${regularSize}px;">
+      ${previewData.scout}
+    </p>
+    <p class="preview-line" style="font-family:${regularFamily};font-size:${regularSize}px;">
+      for completing ${previewData.award}
+    </p>
+    <div class="preview-sig-row">
+      <div class="preview-sig">
+        <div class="preview-sig-name" style="font-family:${scriptFamily};font-size:${scriptSize}px;">
+          ${previewData.denLeader}
+        </div>
+        <div class="preview-sig-label">Den Leader</div>
+      </div>
+      <div class="preview-sig">
+        <div class="preview-sig-name" style="font-family:${scriptFamily};font-size:${scriptSize}px;">
+          ${previewData.cubmaster}
+        </div>
+        <div class="preview-sig-label">Cubmaster</div>
+      </div>
+    </div>
+  `;
 }
 
 async function generatePdf() {
@@ -76,6 +178,7 @@ async function generatePdf() {
   formData.append("shiftLeft", payload.shiftLeft);
   formData.append("shiftDown", payload.shiftDown);
   formData.append("fontSize", payload.fontSize);
+  formData.append("scriptFontSize", payload.scriptFontSize);
   formData.append("outputName", payload.outputName);
 
   generateBtn.disabled = true;
@@ -94,7 +197,7 @@ async function generatePdf() {
 
     const blob = await response.blob();
     const url = URL.createObjectURL(blob);
-    outputArea.innerHTML = `
+    downloadPanel.innerHTML = `
       <div>
         <strong>${payload.outputName}</strong>
         <p style="margin: 6px 0; color: #64748b;">Ready to download.</p>
@@ -112,11 +215,20 @@ async function generatePdf() {
 csvFile.addEventListener("change", () => {
   const file = csvFile.files[0];
   csvName.textContent = file ? file.name : "No file selected";
+  updatePreviewFromCsv(file);
 });
 
-fields.fontName.addEventListener("change", setFontSample);
-fields.scriptFont.addEventListener("change", setFontSample);
+Object.values(fields).forEach((field) => {
+  field.addEventListener("change", () => {
+    setFontSample();
+    renderLivePreview();
+  });
+  field.addEventListener("input", () => {
+    renderLivePreview();
+  });
+});
 
 generateBtn.addEventListener("click", generatePdf);
 
 setFontSample();
+renderLivePreview();

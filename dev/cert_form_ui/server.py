@@ -153,8 +153,8 @@ def generate_pdf():
     script_choice = request.form.get("scriptFont", "PatrickHand")
     shift_left = _parse_float(request.form.get("shiftLeft", "0.5"), fallback=0.5)
     shift_down = _parse_float(request.form.get("shiftDown", "0.5"), fallback=0.5)
-    font_size = _parse_float(request.form.get("fontSize", "9"), fallback=9.0)
-    script_font_size = _parse_float(request.form.get("scriptFontSize", str(font_size)), fallback=font_size)
+    font_size = _parse_float(request.form.get("fontSize", "14"), fallback=14.0)
+    script_font_size = _parse_float(request.form.get("scriptFontSize", "24"), fallback=24.0)
     output_name = _safe_output_name(request.form.get("outputName", "filled_awards.pdf"))
 
     if not TEMPLATE_PATH.exists():

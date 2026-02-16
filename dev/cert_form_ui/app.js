@@ -17,19 +17,13 @@ const fields = {
 
 const fontPreviewMap = {
   Helvetica: "Helvetica, Arial, sans-serif",
-  "Times-Roman": "Times New Roman, Times, serif",
+  TimesRoman: "Times New Roman, Times, serif",
   Courier: "Courier New, Courier, monospace",
-  Georgia: "Georgia, serif",
-  Verdana: "Verdana, Geneva, sans-serif",
-  Tahoma: "Tahoma, Geneva, sans-serif",
-  TrebuchetMS: "Trebuchet MS, sans-serif",
-  TimesNewRoman: "Times New Roman, Times, serif",
-  CourierNew: "Courier New, Courier, monospace",
-  Geneva: "Geneva, Verdana, sans-serif",
-  Chalkduster: "Chalkduster, fantasy",
-  AppleChancery: "\"Apple Chancery\", \"URW Chancery L\", cursive",
-  BradleyHand: "\"Bradley Hand\", \"Bradley Hand ITC\", cursive",
-  BrushScript: "\"Brush Script MT\", \"Brush Script Std\", cursive",
+  DejaVuSerif: "\"DejaVu Serif\", Georgia, serif",
+  DejaVuSans: "\"DejaVu Sans\", Verdana, sans-serif",
+  DejaVuSansMono: "\"DejaVu Sans Mono\", \"Courier New\", monospace",
+  DejaVuSerifItalic: "\"DejaVu Serif\", Georgia, serif",
+  DejaVuSansOblique: "\"DejaVu Sans\", Verdana, sans-serif",
 };
 
 function setStatus(message, type = "info") {

@@ -26,57 +26,75 @@ from fill_cub_scout_certs import fill_certificates  # noqa: E402
 app = Flask(__name__, static_folder=str(UI_DIR), static_url_path="")
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5 MB CSV upload limit
 
-SCRIPT_FONTS = {
-    "AppleChancery": [
-        "/System/Library/Fonts/Supplemental/Apple Chancery.ttf",
-    ],
-    "BradleyHand": [
-        "/System/Library/Fonts/Supplemental/Bradley Hand Bold.ttf",
-    ],
-    "BrushScript": [
-        "/System/Library/Fonts/Supplemental/Brush Script.ttf",
-    ],
-    "Georgia": [
-        "/System/Library/Fonts/Supplemental/Georgia.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf",
-    ],
-    "Verdana": [
-        "/System/Library/Fonts/Supplemental/Verdana.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    ],
-    "Tahoma": [
-        "/System/Library/Fonts/Supplemental/Tahoma.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    ],
-    "TrebuchetMS": [
-        "/System/Library/Fonts/Supplemental/Trebuchet MS.ttf",
-    ],
-    "TimesNewRoman": [
-        "/System/Library/Fonts/Supplemental/Times New Roman.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf",
-    ],
-    "CourierNew": [
-        "/System/Library/Fonts/Supplemental/Courier New.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
-    ],
-    "Geneva": [
-        "/System/Library/Fonts/Supplemental/Geneva.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    ],
-    "Chalkduster": [
-        "/System/Library/Fonts/Supplemental/Chalkduster.ttf",
-    ],
+FONT_CHOICES = {
+    "Helvetica": {"pdf_name": "Helvetica", "paths": []},
+    "TimesRoman": {"pdf_name": "Times-Roman", "paths": []},
+    "Courier": {"pdf_name": "Courier", "paths": []},
+    "DejaVuSerif": {
+        "pdf_name": "DejaVuSerif",
+        "paths": [
+            "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf",
+            "/System/Library/Fonts/Supplemental/Georgia.ttf",
+        ],
+    },
+    "DejaVuSans": {
+        "pdf_name": "DejaVuSans",
+        "paths": [
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "/System/Library/Fonts/Supplemental/Verdana.ttf",
+        ],
+    },
+    "DejaVuSansMono": {
+        "pdf_name": "DejaVuSansMono",
+        "paths": [
+            "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+            "/System/Library/Fonts/Supplemental/Courier New.ttf",
+        ],
+    },
+}
+
+SCRIPT_FONT_CHOICES = {
+    "None": {"pdf_name": None, "paths": []},
+    "DejaVuSerifItalic": {
+        "pdf_name": "DejaVuSerifItalic",
+        "paths": ["/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"],
+    },
+    "DejaVuSansOblique": {
+        "pdf_name": "DejaVuSansOblique",
+        "paths": ["/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"],
+    },
+}
+
+LEGACY_FONT_ALIASES = {
+    "Times-Roman": "TimesRoman",
+    "Georgia": "DejaVuSerif",
+    "Verdana": "DejaVuSans",
+    "Tahoma": "DejaVuSans",
+    "TrebuchetMS": "DejaVuSans",
+    "TimesNewRoman": "DejaVuSerif",
+    "CourierNew": "DejaVuSansMono",
+    "Geneva": "DejaVuSans",
+    "Chalkduster": "DejaVuSans",
+    "AppleChancery": "DejaVuSerifItalic",
+    "BradleyHand": "DejaVuSerifItalic",
+    "BrushScript": "DejaVuSerifItalic",
 }
 
 
-def _resolve_script_font_file(name: str) -> Optional[str]:
-    paths = SCRIPT_FONTS.get(name)
-    if not paths:
-        return None
-    for path in paths:
+def _resolve_font_choice(choice_id: str, catalog: dict) -> tuple[Optional[str], Optional[str]]:
+    resolved_id = LEGACY_FONT_ALIASES.get(choice_id, choice_id)
+    choice = catalog.get(resolved_id)
+    if not choice:
+        return None, None
+    pdf_name = choice["pdf_name"]
+    if not pdf_name:
+        return None, None
+    if not choice["paths"]:
+        return pdf_name, None
+    for path in choice["paths"]:
         if Path(path).exists():
-            return path
-    return None
+            return pdf_name, path
+    return None, None
 
 
 def _safe_output_name(value: str) -> str:
@@ -105,8 +123,8 @@ def generate_pdf():
     if not csv_file.filename:
         return jsonify({"error": "CSV file missing"}), 400
 
-    font_name = request.form.get("fontName", "Helvetica")
-    script_font = request.form.get("scriptFont", "AppleChancery")
+    font_choice = request.form.get("fontName", "Helvetica")
+    script_choice = request.form.get("scriptFont", "DejaVuSerifItalic")
     shift_left = _parse_float(request.form.get("shiftLeft", "0.5"), fallback=0.5)
     shift_down = _parse_float(request.form.get("shiftDown", "0.0"), fallback=0.0)
     font_size = _parse_float(request.form.get("fontSize", "9"), fallback=9.0)
@@ -115,10 +133,11 @@ def generate_pdf():
     if not TEMPLATE_PATH.exists():
         return jsonify({"error": "Template PDF not configured on server."}), 500
 
-    script_font_file = None
-    if script_font and script_font != "None":
-        script_font_file = _resolve_script_font_file(script_font)
-    font_file = _resolve_script_font_file(font_name)
+    font_name, font_file = _resolve_font_choice(font_choice, FONT_CHOICES)
+    if not font_name:
+        font_name = "Helvetica"
+        font_file = None
+    script_font_name, script_font_file = _resolve_font_choice(script_choice, SCRIPT_FONT_CHOICES)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir_path = Path(tmpdir)
@@ -133,7 +152,7 @@ def generate_pdf():
             shift_left_inch=shift_left,
             shift_down_inch=shift_down,
             font_name=font_name,
-            script_font_name=script_font if script_font_file else None,
+            script_font_name=script_font_name,
             font_size=font_size,
             font_file=font_file,
             script_font_file=script_font_file,

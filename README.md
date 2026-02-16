@@ -38,6 +38,11 @@ Date,Pack Number,Scout Name,Award Name,Den Leader,Cubmaster
 Download the template from the UI or use:
 `dev/cert_form_ui/cub_scout_award_template.csv`.
 
+Rank template currently available:
+- `dev/cert_form_ui/wolf_rank_template.csv`
+  - Derived from visible placeholder labels in `/Users/kevinwolf/Downloads/34220(15)FillTempl-WOLF.pdf`.
+  - The Wolf PDF appears non-fillable (no AcroForm fields detected), so this CSV is for rank workflow planning/template prep.
+
 ## Template PDF
 The generator uses a fillable PDF template. The path is currently hardcoded in:
 - `assets/templates/cub_scout_award_certificate.pdf` (default)

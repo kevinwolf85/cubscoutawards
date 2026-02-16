@@ -14,24 +14,29 @@ from threading import Lock
 from typing import Optional
 
 from flask import Flask, jsonify, request, send_file
-from pypdf import PdfReader
+from pypdf import PdfReader, PdfWriter
 
 UI_DIR = Path(__file__).resolve().parent
 REPO_ROOT = UI_DIR.parent.parent
 DEFAULT_TEMPLATE_PATH = REPO_ROOT / "assets" / "templates" / "cub_scout_award_certificate.pdf"
+DEFAULT_LION_RANK_TEMPLATE_PATH = REPO_ROOT / "assets" / "templates" / "lion_rank_card.pdf"
+DEFAULT_TIGER_RANK_TEMPLATE_PATH = REPO_ROOT / "assets" / "templates" / "tiger_rank_card.pdf"
 DEFAULT_WOLF_RANK_TEMPLATE_PATH = REPO_ROOT / "assets" / "templates" / "wolf_rank_card.pdf"
+DEFAULT_BEAR_RANK_TEMPLATE_PATH = REPO_ROOT / "assets" / "templates" / "bear_rank_card.pdf"
+DEFAULT_WEBELO_RANK_TEMPLATE_PATH = REPO_ROOT / "assets" / "templates" / "webelo_rank_card.pdf"
+DEFAULT_ARROW_OF_LIGHT_RANK_TEMPLATE_PATH = REPO_ROOT / "assets" / "templates" / "arrow_of_light_rank_card.pdf"
 FONTS_DIR = REPO_ROOT / "assets" / "fonts"
 TEMPLATE_PATH = Path(os.environ.get("CERT_TEMPLATE_PATH", str(DEFAULT_TEMPLATE_PATH))).expanduser()
 RANK_TEMPLATE_PATHS = {
-    "Lion": Path(os.environ.get("CERT_TEMPLATE_PATH_LION", str(DEFAULT_TEMPLATE_PATH))).expanduser(),
-    "Tiger": Path(os.environ.get("CERT_TEMPLATE_PATH_TIGER", str(DEFAULT_TEMPLATE_PATH))).expanduser(),
+    "Lion": Path(os.environ.get("CERT_TEMPLATE_PATH_LION", str(DEFAULT_LION_RANK_TEMPLATE_PATH))).expanduser(),
+    "Tiger": Path(os.environ.get("CERT_TEMPLATE_PATH_TIGER", str(DEFAULT_TIGER_RANK_TEMPLATE_PATH))).expanduser(),
     "Wolf": Path(
         os.environ.get("CERT_TEMPLATE_PATH_WOLF", str(DEFAULT_WOLF_RANK_TEMPLATE_PATH))
     ).expanduser(),
-    "Bear": Path(os.environ.get("CERT_TEMPLATE_PATH_BEAR", str(DEFAULT_TEMPLATE_PATH))).expanduser(),
-    "Webelo": Path(os.environ.get("CERT_TEMPLATE_PATH_WEBELO", str(DEFAULT_TEMPLATE_PATH))).expanduser(),
+    "Bear": Path(os.environ.get("CERT_TEMPLATE_PATH_BEAR", str(DEFAULT_BEAR_RANK_TEMPLATE_PATH))).expanduser(),
+    "Webelo": Path(os.environ.get("CERT_TEMPLATE_PATH_WEBELO", str(DEFAULT_WEBELO_RANK_TEMPLATE_PATH))).expanduser(),
     "Arrow of Light": Path(
-        os.environ.get("CERT_TEMPLATE_PATH_ARROW_OF_LIGHT", str(DEFAULT_TEMPLATE_PATH))
+        os.environ.get("CERT_TEMPLATE_PATH_ARROW_OF_LIGHT", str(DEFAULT_ARROW_OF_LIGHT_RANK_TEMPLATE_PATH))
     ).expanduser(),
 }
 
@@ -58,6 +63,7 @@ RANK_REQUIRED_HEADERS = COMMON_REQUIRED_HEADERS + ["Rank"]
 DATE_FORMATS = ("%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y")
 GENERATE_PER_MINUTE = int(os.environ.get("RATE_LIMIT_GENERATE_PER_MINUTE", "12"))
 VALIDATE_PER_MINUTE = int(os.environ.get("RATE_LIMIT_VALIDATE_PER_MINUTE", "30"))
+RANK_OUTPUT_ROTATION_DEGREES = int(os.environ.get("RANK_OUTPUT_ROTATION_DEGREES", "90")) % 360
 
 FONT_CHOICES = {
     "Helvetica": {"pdf_name": "Helvetica", "paths": []},
@@ -321,6 +327,20 @@ def _parse_csv_bytes(csv_bytes: bytes) -> tuple[list[str], list[dict[str, str]]]
     return list(reader.fieldnames), rows
 
 
+def _normalize_pdf_rotation_in_place(pdf_path: Path, target_rotation: int) -> None:
+    target = target_rotation % 360
+    reader = PdfReader(str(pdf_path))
+    writer = PdfWriter()
+    for page in reader.pages:
+        current = int(page.get("/Rotate") or 0) % 360
+        delta = (target - current) % 360
+        if delta:
+            page.rotate(delta)
+        writer.add_page(page)
+    with pdf_path.open("wb") as f:
+        writer.write(f)
+
+
 def _build_validation_report(
     fieldnames: list[str], rows: list[dict[str, str]], workflow: str, selected_rank: str
 ) -> dict[str, object]:
@@ -478,6 +498,8 @@ def generate_pdf():
                         font_file=font_file,
                         script_font_file=script_font_file,
                     )
+                    if workflow == "ranks":
+                        _normalize_pdf_rotation_in_place(row_pdf, RANK_OUTPUT_ROTATION_DEGREES)
                     zf.write(row_pdf, arcname=row_pdf.name)
 
             return send_file(
@@ -501,6 +523,8 @@ def generate_pdf():
             font_file=font_file,
             script_font_file=script_font_file,
         )
+        if workflow == "ranks":
+            _normalize_pdf_rotation_in_place(out_path, RANK_OUTPUT_ROTATION_DEGREES)
 
         return send_file(
             out_path,

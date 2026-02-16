@@ -33,7 +33,13 @@ cubscout-awards --csv /path/to/awards.csv --output /path/to/filled_awards.pdf
 
 ## Notes
 - The default PDF template is `assets/templates/cub_scout_award_certificate.pdf`.
-- The default Wolf rank template is `assets/templates/wolf_rank_card.pdf`.
+- Default rank templates:
+  - `assets/templates/lion_rank_card.pdf`
+  - `assets/templates/tiger_rank_card.pdf`
+  - `assets/templates/wolf_rank_card.pdf`
+  - `assets/templates/bear_rank_card.pdf`
+  - `assets/templates/webelo_rank_card.pdf`
+  - `assets/templates/arrow_of_light_rank_card.pdf`
 - `CERT_TEMPLATE_PATH` overrides the server template.
 - `--template` overrides the CLI template.
 - For local installs, use editable mode (`pip install -e .`) so `assets/` files remain available.
@@ -49,6 +55,7 @@ cubscout-awards --csv /path/to/awards.csv --output /path/to/filled_awards.pdf
 - Rank generation auto-detects non-fillable templates and falls back to `fill_rank_cards`.
 - Wolf rank cards render `Den Number`, `Pack Number`, `Date`, `Scout Name`, `Den Leader`, and `Cubmaster` via tuned coordinate boxes with centered text.
 - Wolf rank signature rendering caps script size for legibility on the small printed lines.
+- Rank exports are rotated by default for print-friendly orientation (`RANK_OUTPUT_ROTATION_DEGREES=90`).
 - CI workflow: `.github/workflows/ci.yml` runs install + smoke checks.
 - Deploy workflow: `.github/workflows/deploy-cloud-run.yml` deploys to Cloud Run on `main` when required GitHub Variables/Secrets are set.
 - Package publish workflow: `.github/workflows/publish-ghcr.yml` publishes `ghcr.io/<owner>/cubscoutawards` on pushes to `main`.

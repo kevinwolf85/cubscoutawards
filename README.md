@@ -58,7 +58,12 @@ Rank template currently available:
 ## Template PDF
 The generator uses a fillable PDF template. The path is currently hardcoded in:
 - `assets/templates/cub_scout_award_certificate.pdf` (default)
+- `assets/templates/lion_rank_card.pdf` (default for `Lion` in rank workflow)
+- `assets/templates/tiger_rank_card.pdf` (default for `Tiger` in rank workflow)
 - `assets/templates/wolf_rank_card.pdf` (default for `Wolf` in rank workflow)
+- `assets/templates/bear_rank_card.pdf` (default for `Bear` in rank workflow)
+- `assets/templates/webelo_rank_card.pdf` (default for `Webelo` in rank workflow)
+- `assets/templates/arrow_of_light_rank_card.pdf` (default for `Arrow of Light` in rank workflow)
 
 You can override with:
 - `CERT_TEMPLATE_PATH` (web server env var)
@@ -73,6 +78,7 @@ Optional per-rank server template overrides:
 - `CERT_TEMPLATE_PATH_ARROW_OF_LIGHT`
 
 When a selected rank template has no AcroForm fields, the server automatically falls back to coordinate-based rendering (`fill_rank_cards`).
+Rank outputs are rotated by default for print orientation (`RANK_OUTPUT_ROTATION_DEGREES=90`).
 
 ## CLI Usage
 ```sh

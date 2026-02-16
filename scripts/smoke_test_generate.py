@@ -86,31 +86,40 @@ def main() -> None:
     if rank_validate_response.status_code != 200:
         raise SystemExit(f"Rank validate smoke test failed: status={rank_validate_response.status_code}")
 
-    rank_payload = {
-        "csv": (io.BytesIO(rank_csv_bytes), "rank_input.csv"),
-        "workflow": "ranks",
-        "rank": "Wolf",
-        "fontName": "Merriweather",
-        "scriptFont": "DancingScript",
-        "shiftLeft": "0.5",
-        "shiftDown": "0.5",
-        "fontSize": "14",
-        "scriptFontSize": "24",
-        "outputName": "ci_rank_smoke.pdf",
-        "outputMode": "combined_pdf",
-    }
-    rank_response = client.post("/generate", data=rank_payload, content_type="multipart/form-data")
-    if rank_response.status_code != 200:
-        raise SystemExit(f"Rank PDF smoke test failed: status={rank_response.status_code}")
-    if rank_response.headers.get("Content-Type") != "application/pdf":
-        raise SystemExit(f"Rank PDF smoke test failed: content-type={rank_response.headers.get('Content-Type')}")
-    if len(rank_response.data) < 2048:
-        raise SystemExit(f"Rank PDF smoke test failed: output too small ({len(rank_response.data)} bytes)")
-    rank_text = "\n".join((p.extract_text() or "") for p in PdfReader(io.BytesIO(rank_response.data)).pages)
-    if "earned the rank of" not in rank_text:
-        raise SystemExit("Rank PDF smoke test failed: expected rank template text not found.")
-    if "for completing" in rank_text:
-        raise SystemExit("Rank PDF smoke test failed: adventure template text detected.")
+    for rank in ["Lion", "Tiger", "Wolf", "Bear", "Webelo", "Arrow of Light"]:
+        rank_payload = {
+            "csv": (io.BytesIO(rank_csv_bytes), "rank_input.csv"),
+            "workflow": "ranks",
+            "rank": rank,
+            "fontName": "Merriweather",
+            "scriptFont": "DancingScript",
+            "shiftLeft": "0.5",
+            "shiftDown": "0.5",
+            "fontSize": "14",
+            "scriptFontSize": "24",
+            "outputName": f"ci_rank_{rank.replace(' ', '_').lower()}.pdf",
+            "outputMode": "combined_pdf",
+        }
+        rank_response = client.post("/generate", data=rank_payload, content_type="multipart/form-data")
+        if rank_response.status_code != 200:
+            raise SystemExit(f"{rank} rank PDF smoke test failed: status={rank_response.status_code}")
+        if rank_response.headers.get("Content-Type") != "application/pdf":
+            raise SystemExit(
+                f"{rank} rank PDF smoke test failed: content-type={rank_response.headers.get('Content-Type')}"
+            )
+        if len(rank_response.data) < 2048:
+            raise SystemExit(f"{rank} rank PDF smoke test failed: output too small ({len(rank_response.data)} bytes)")
+        rank_reader = PdfReader(io.BytesIO(rank_response.data))
+        first_rotate = int(rank_reader.pages[0].get("/Rotate") or 0) % 360
+        if first_rotate != 90:
+            raise SystemExit(
+                f"{rank} rank PDF smoke test failed: expected 90-degree rotation, got {first_rotate}."
+            )
+        rank_text = "\n".join((p.extract_text() or "") for p in rank_reader.pages)
+        if "earned the rank of" not in rank_text:
+            raise SystemExit(f"{rank} rank PDF smoke test failed: expected rank template text not found.")
+        if "for completing" in rank_text:
+            raise SystemExit(f"{rank} rank PDF smoke test failed: adventure template text detected.")
 
     print("Smoke tests passed.")
 

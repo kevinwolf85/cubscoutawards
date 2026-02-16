@@ -9,20 +9,22 @@ from typing import Optional
 
 from flask import Flask, jsonify, request, send_file
 
-# Import the generator script
-import sys
-
 UI_DIR = Path(__file__).resolve().parent
 REPO_ROOT = UI_DIR.parent.parent
-DEV_DIR = REPO_ROOT / "dev"
 DEFAULT_TEMPLATE_PATH = REPO_ROOT / "assets" / "templates" / "cub_scout_award_certificate.pdf"
 FONTS_DIR = REPO_ROOT / "assets" / "fonts"
 TEMPLATE_PATH = Path(os.environ.get("CERT_TEMPLATE_PATH", str(DEFAULT_TEMPLATE_PATH))).expanduser()
 
-if str(DEV_DIR) not in sys.path:
-    sys.path.insert(0, str(DEV_DIR))
+try:
+    from dev.fill_cub_scout_certs import fill_certificates
+except ModuleNotFoundError:
+    # Fallback for direct script execution from source checkout.
+    import sys
 
-from fill_cub_scout_certs import fill_certificates  # noqa: E402
+    DEV_DIR = REPO_ROOT / "dev"
+    if str(DEV_DIR) not in sys.path:
+        sys.path.insert(0, str(DEV_DIR))
+    from fill_cub_scout_certs import fill_certificates  # type: ignore
 
 app = Flask(__name__, static_folder=str(UI_DIR), static_url_path="")
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5 MB CSV upload limit
@@ -206,5 +208,9 @@ def favicon():
     return app.send_static_file("favicon.png")
 
 
-if __name__ == "__main__":
+def main() -> None:
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "5178")), debug=False)
+
+
+if __name__ == "__main__":
+    main()

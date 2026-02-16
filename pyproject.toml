@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cubscoutawards"
+version = "0.1.0"
+description = "Cub Scout award certificate generator with local web UI."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "flask==3.1.2",
+  "gunicorn==23.0.0",
+  "pypdf==6.0.0",
+  "reportlab==4.4.4",
+]
+
+[project.scripts]
+cubscout-awards = "dev.fill_cub_scout_certs:main"
+cubscout-awards-web = "dev.cert_form_ui.server:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["dev", "dev.*"]
+
+[tool.setuptools.package-data]
+dev = ["cert_form_ui/*"]

@@ -10,21 +10,25 @@ Generate Cub Scout award certificates from a CSV and a fillable PDF template. In
   - `cub_scout_award_template.csv`
 
 ## Requirements
-- Python 3
-- Packages: `pypdf`, `reportlab`, `flask`, `gunicorn`
+- Python 3.10+
 
-## Setup (Local)
+## Setup (Local Package Install)
 ```sh
 python3 -m venv .venv
 . .venv/bin/activate
-pip install -r requirements.txt
+pip install -e .
 ```
 
 ## Run the Web UI
 ```sh
-python /Users/kevinwolf/cubscoutawards/dev/cert_form_ui/server.py
+cubscout-awards-web
 ```
 Open `http://localhost:5178`.
+
+Alternative (without package entrypoint):
+```sh
+python dev/cert_form_ui/server.py
+```
 
 ## CSV Format
 Headers required:
@@ -44,11 +48,22 @@ You can override with:
 
 ## CLI Usage
 ```sh
-python /Users/kevinwolf/cubscoutawards/dev/fill_cub_scout_certs.py \
+cubscout-awards \
   --csv "/path/to/awards.csv" \
   --output "/path/to/filled_awards.pdf" \
   --shift-left-inch 0.5 \
   --shift-down-inch 0.5
+```
+
+You can also provide custom font files:
+```sh
+cubscout-awards \
+  --csv "/path/to/awards.csv" \
+  --output "/path/to/filled_awards.pdf" \
+  --font-name Merriweather \
+  --font-file assets/fonts/Merriweather-Regular.ttf \
+  --script-font-name DancingScript \
+  --script-font-file assets/fonts/DancingScript-Regular.ttf
 ```
 
 ## Notes
@@ -57,6 +72,7 @@ python /Users/kevinwolf/cubscoutawards/dev/fill_cub_scout_certs.py \
 - Den Leader and Cubmaster use a cursive font when available.
 - You can set both a main font size and a separate script font size for signatures.
 - Additional Google Fonts are available in the UI and rendered in PDFs via bundled font files in `assets/fonts`.
+- For local install, use editable mode (`pip install -e .`) so template/font assets under `assets/` are available.
 
 ## Deploy to Google Cloud Run (Public)
 1. Set your project:

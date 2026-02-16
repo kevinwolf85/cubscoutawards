@@ -59,6 +59,13 @@ FONT_CHOICES = {
     "CabinSketch": {"pdf_name": "CabinSketch", "paths": [str(FONTS_DIR / "CabinSketch-Regular.ttf")]},
     "LilitaOne": {"pdf_name": "LilitaOne", "paths": [str(FONTS_DIR / "LilitaOne-Regular.ttf")]},
     "Righteous": {"pdf_name": "Righteous", "paths": [str(FONTS_DIR / "Righteous-Regular.ttf")]},
+    "Oswald": {"pdf_name": "Oswald", "paths": [str(FONTS_DIR / "Oswald-Regular.ttf")]},
+    "Montserrat": {"pdf_name": "Montserrat", "paths": [str(FONTS_DIR / "Montserrat-Regular.ttf")]},
+    "Kanit": {"pdf_name": "Kanit", "paths": [str(FONTS_DIR / "Kanit-Regular.ttf")]},
+    "Lora": {"pdf_name": "Lora", "paths": [str(FONTS_DIR / "Lora-Regular.ttf")]},
+    "CrimsonPro": {"pdf_name": "CrimsonPro", "paths": [str(FONTS_DIR / "CrimsonPro-Regular.ttf")]},
+    "IBMPlexSerif": {"pdf_name": "IBMPlexSerif", "paths": [str(FONTS_DIR / "IBMPlexSerif-Regular.ttf")]},
+    "Merriweather": {"pdf_name": "Merriweather", "paths": [str(FONTS_DIR / "Merriweather-Regular.ttf")]},
 }
 
 SCRIPT_FONT_CHOICES = {
@@ -75,6 +82,12 @@ SCRIPT_FONT_CHOICES = {
     "PermanentMarker": {
         "pdf_name": "PermanentMarker",
         "paths": [str(FONTS_DIR / "PermanentMarker-Regular.ttf")],
+    },
+    "DancingScript": {"pdf_name": "DancingScript", "paths": [str(FONTS_DIR / "DancingScript-Regular.ttf")]},
+    "Caveat": {"pdf_name": "Caveat", "paths": [str(FONTS_DIR / "Caveat-Regular.ttf")]},
+    "KaushanScript": {
+        "pdf_name": "KaushanScript",
+        "paths": [str(FONTS_DIR / "KaushanScript-Regular.ttf")],
     },
 }
 

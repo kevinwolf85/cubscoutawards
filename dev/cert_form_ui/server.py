@@ -16,6 +16,7 @@ UI_DIR = Path(__file__).resolve().parent
 REPO_ROOT = UI_DIR.parent.parent
 DEV_DIR = REPO_ROOT / "dev"
 DEFAULT_TEMPLATE_PATH = REPO_ROOT / "assets" / "templates" / "cub_scout_award_certificate.pdf"
+FONTS_DIR = REPO_ROOT / "assets" / "fonts"
 TEMPLATE_PATH = Path(os.environ.get("CERT_TEMPLATE_PATH", str(DEFAULT_TEMPLATE_PATH))).expanduser()
 
 if str(DEV_DIR) not in sys.path:
@@ -51,6 +52,13 @@ FONT_CHOICES = {
             "/System/Library/Fonts/Supplemental/Courier New.ttf",
         ],
     },
+    "Alegreya": {"pdf_name": "Alegreya", "paths": [str(FONTS_DIR / "Alegreya-Regular.ttf")]},
+    "Archivo": {"pdf_name": "Archivo", "paths": [str(FONTS_DIR / "Archivo-Regular.ttf")]},
+    "FiraSans": {"pdf_name": "FiraSans", "paths": [str(FONTS_DIR / "FiraSans-Regular.ttf")]},
+    "Bangers": {"pdf_name": "Bangers", "paths": [str(FONTS_DIR / "Bangers-Regular.ttf")]},
+    "CabinSketch": {"pdf_name": "CabinSketch", "paths": [str(FONTS_DIR / "CabinSketch-Regular.ttf")]},
+    "LilitaOne": {"pdf_name": "LilitaOne", "paths": [str(FONTS_DIR / "LilitaOne-Regular.ttf")]},
+    "Righteous": {"pdf_name": "Righteous", "paths": [str(FONTS_DIR / "Righteous-Regular.ttf")]},
 }
 
 SCRIPT_FONT_CHOICES = {
@@ -62,6 +70,11 @@ SCRIPT_FONT_CHOICES = {
     "DejaVuSansOblique": {
         "pdf_name": "DejaVuSansOblique",
         "paths": ["/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"],
+    },
+    "PatrickHand": {"pdf_name": "PatrickHand", "paths": [str(FONTS_DIR / "PatrickHand-Regular.ttf")]},
+    "PermanentMarker": {
+        "pdf_name": "PermanentMarker",
+        "paths": [str(FONTS_DIR / "PermanentMarker-Regular.ttf")],
     },
 }
 
@@ -75,9 +88,9 @@ LEGACY_FONT_ALIASES = {
     "CourierNew": "DejaVuSansMono",
     "Geneva": "DejaVuSans",
     "Chalkduster": "DejaVuSans",
-    "AppleChancery": "DejaVuSerifItalic",
-    "BradleyHand": "DejaVuSerifItalic",
-    "BrushScript": "DejaVuSerifItalic",
+    "AppleChancery": "PatrickHand",
+    "BradleyHand": "PatrickHand",
+    "BrushScript": "PermanentMarker",
 }
 
 
@@ -124,7 +137,7 @@ def generate_pdf():
         return jsonify({"error": "CSV file missing"}), 400
 
     font_choice = request.form.get("fontName", "Helvetica")
-    script_choice = request.form.get("scriptFont", "DejaVuSerifItalic")
+    script_choice = request.form.get("scriptFont", "PatrickHand")
     shift_left = _parse_float(request.form.get("shiftLeft", "0.5"), fallback=0.5)
     shift_down = _parse_float(request.form.get("shiftDown", "0.5"), fallback=0.5)
     font_size = _parse_float(request.form.get("fontSize", "9"), fallback=9.0)

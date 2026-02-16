@@ -17,7 +17,7 @@ Generate Cub Scout award certificates from a CSV and a fillable PDF template. In
 ```sh
 python3 -m venv .venv
 . .venv/bin/activate
-pip install pypdf reportlab flask
+pip install -r requirements.txt
 ```
 
 ## Run the Web UI
@@ -48,13 +48,14 @@ python /Users/kevinwolf/cubscoutawards/dev/fill_cub_scout_certs.py \
   --csv "/path/to/awards.csv" \
   --output "/path/to/filled_awards.pdf" \
   --shift-left-inch 0.5 \
-  --shift-down-inch 0
+  --shift-down-inch 0.5
 ```
 
 ## Notes
 - Dates are normalized to `MM/DD/YYYY`.
 - Fields are centered inside their boxes.
 - Den Leader and Cubmaster use a cursive font when available.
+- Additional Google Fonts are available in the UI and rendered in PDFs via bundled font files in `assets/fonts`.
 
 ## Deploy to Google Cloud Run (Public)
 1. Set your project:

@@ -106,7 +106,7 @@ cubscout-awards \
   - `combined_pdf` (single merged PDF)
   - `per_scout_zip` (ZIP containing one PDF per scout)
 - Ranks page uses the same controls as Adventures (CSV upload, fonts, shifts, validation, output modes) plus a `Rank` selector that drives template selection.
-- Wolf rank rendering uses tuned coordinates for `Den Number`, `Pack Number`, `Date`, `Scout Name`, `Den Leader`, and `Cubmaster`.
+- Wolf rank rendering uses tuned coordinates and centered text boxes for `Den Number`, `Pack Number`, `Date`, `Scout Name`, `Den Leader`, and `Cubmaster` so placement behavior matches Adventures more closely.
 - On Wolf rank cards, signature text size is capped for readability to avoid collisions with static labels.
 - Basic per-IP rate limiting is enabled for public safety:
   - `RATE_LIMIT_GENERATE_PER_MINUTE` (default `12`)

@@ -22,12 +22,12 @@ CARD_ANCHORS = [
 
 # Coordinates are tuned against 34220(15)FillTempl-WOLF.pdf (landscape sheet of 8 cards)
 FIELD_LAYOUT = {
-    "den_number": {"x": 58.0, "y": 46.0, "size": 7.5, "max_width": 46.0},
-    "pack_number": {"x": 66.0, "y": 58.0, "size": 7.5, "max_width": 50.0},
-    "date": {"x": 76.0, "y": 72.0, "size": 7.0, "max_width": 84.0},
-    "name": {"x": 124.0, "y": -2.0, "size": 10.5, "max_width": 105.0, "max_size": 16.0},
-    "den_leader": {"x": 72.0, "y": 24.0, "size": 8.0, "max_width": 106.0, "max_size": 7.5},
-    "cubmaster": {"x": 89.0, "y": 10.0, "size": 8.0, "max_width": 106.0, "max_size": 7.5},
+    "den_number": {"x": 58.0, "y": 43.0, "width": 46.0, "height": 9.0, "size": 7.5},
+    "pack_number": {"x": 66.0, "y": 55.0, "width": 50.0, "height": 9.0, "size": 7.5},
+    "date": {"x": 76.0, "y": 69.0, "width": 84.0, "height": 9.0, "size": 7.0},
+    "name": {"x": 124.0, "y": -8.0, "width": 105.0, "height": 16.0, "size": 10.5, "max_size": 16.0},
+    "den_leader": {"x": 72.0, "y": 20.5, "width": 106.0, "height": 10.0, "size": 8.0, "max_size": 9.0},
+    "cubmaster": {"x": 89.0, "y": 5.5, "width": 106.0, "height": 10.0, "size": 8.0, "max_size": 9.0},
 }
 
 
@@ -64,14 +64,15 @@ def _fit_font_size(c: canvas.Canvas, text: str, font_name: str, base_size: float
     return max(size, 6.0)
 
 
-def _draw_rotated_text(
+def _draw_rotated_text_in_box(
     c: canvas.Canvas,
     anchor_x: float,
     anchor_y: float,
     text: str,
     font_name: str,
     base_size: float,
-    max_width: float,
+    box_width: float,
+    box_height: float,
     field_x: float,
     field_y: float,
     max_size: float | None = None,
@@ -80,12 +81,12 @@ def _draw_rotated_text(
         return
     if max_size is not None:
         base_size = min(base_size, max_size)
-    size = _fit_font_size(c, text, font_name, base_size, max_width)
+    size = _fit_font_size(c, text, font_name, base_size, box_width - 2.0)
     c.saveState()
     c.translate(anchor_x + (field_x - CARD_ANCHOR_X), anchor_y + field_y)
     c.rotate(90)
     c.setFont(font_name, size)
-    c.drawString(0, 0, text)
+    c.drawCentredString(box_width / 2.0, (box_height - size) / 2.0, text)
     c.restoreState()
 
 
@@ -151,71 +152,77 @@ def fill_rank_cards(
             den_leader = (row.get("Den Leader") or "").strip()
             cubmaster = (row.get("Cubmaster") or "").strip()
 
-            _draw_rotated_text(
+            _draw_rotated_text_in_box(
                 c,
                 anchor_x,
                 anchor_y,
                 den_number,
                 font_name,
                 FIELD_LAYOUT["den_number"]["size"],
-                FIELD_LAYOUT["den_number"]["max_width"],
+                FIELD_LAYOUT["den_number"]["width"],
+                FIELD_LAYOUT["den_number"]["height"],
                 FIELD_LAYOUT["den_number"]["x"],
                 FIELD_LAYOUT["den_number"]["y"],
             )
-            _draw_rotated_text(
+            _draw_rotated_text_in_box(
                 c,
                 anchor_x,
                 anchor_y,
                 pack_number,
                 font_name,
                 FIELD_LAYOUT["pack_number"]["size"],
-                FIELD_LAYOUT["pack_number"]["max_width"],
+                FIELD_LAYOUT["pack_number"]["width"],
+                FIELD_LAYOUT["pack_number"]["height"],
                 FIELD_LAYOUT["pack_number"]["x"],
                 FIELD_LAYOUT["pack_number"]["y"],
             )
-            _draw_rotated_text(
+            _draw_rotated_text_in_box(
                 c,
                 anchor_x,
                 anchor_y,
                 date_value,
                 font_name,
                 FIELD_LAYOUT["date"]["size"],
-                FIELD_LAYOUT["date"]["max_width"],
+                FIELD_LAYOUT["date"]["width"],
+                FIELD_LAYOUT["date"]["height"],
                 FIELD_LAYOUT["date"]["x"],
                 FIELD_LAYOUT["date"]["y"],
             )
-            _draw_rotated_text(
+            _draw_rotated_text_in_box(
                 c,
                 anchor_x,
                 anchor_y,
                 scout_name,
                 font_name,
                 max(FIELD_LAYOUT["name"]["size"], font_size),
-                FIELD_LAYOUT["name"]["max_width"],
+                FIELD_LAYOUT["name"]["width"],
+                FIELD_LAYOUT["name"]["height"],
                 FIELD_LAYOUT["name"]["x"],
                 FIELD_LAYOUT["name"]["y"],
                 FIELD_LAYOUT["name"].get("max_size"),
             )
-            _draw_rotated_text(
+            _draw_rotated_text_in_box(
                 c,
                 anchor_x,
                 anchor_y,
                 den_leader,
                 signature_font,
                 max(FIELD_LAYOUT["den_leader"]["size"], signature_size),
-                FIELD_LAYOUT["den_leader"]["max_width"],
+                FIELD_LAYOUT["den_leader"]["width"],
+                FIELD_LAYOUT["den_leader"]["height"],
                 FIELD_LAYOUT["den_leader"]["x"],
                 FIELD_LAYOUT["den_leader"]["y"],
                 FIELD_LAYOUT["den_leader"].get("max_size"),
             )
-            _draw_rotated_text(
+            _draw_rotated_text_in_box(
                 c,
                 anchor_x,
                 anchor_y,
                 cubmaster,
                 signature_font,
                 max(FIELD_LAYOUT["cubmaster"]["size"], signature_size),
-                FIELD_LAYOUT["cubmaster"]["max_width"],
+                FIELD_LAYOUT["cubmaster"]["width"],
+                FIELD_LAYOUT["cubmaster"]["height"],
                 FIELD_LAYOUT["cubmaster"]["x"],
                 FIELD_LAYOUT["cubmaster"]["y"],
                 FIELD_LAYOUT["cubmaster"].get("max_size"),

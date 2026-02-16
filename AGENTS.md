@@ -47,7 +47,7 @@ cubscout-awards --csv /path/to/awards.csv --output /path/to/filled_awards.pdf
   - `CERT_TEMPLATE_PATH_LION`, `CERT_TEMPLATE_PATH_TIGER`, `CERT_TEMPLATE_PATH_WOLF`
   - `CERT_TEMPLATE_PATH_BEAR`, `CERT_TEMPLATE_PATH_WEBELO`, `CERT_TEMPLATE_PATH_ARROW_OF_LIGHT`
 - Rank generation auto-detects non-fillable templates and falls back to `fill_rank_cards`.
-- Wolf rank cards render `Den Number`, `Pack Number`, `Date`, `Scout Name`, `Den Leader`, and `Cubmaster` via tuned coordinates.
+- Wolf rank cards render `Den Number`, `Pack Number`, `Date`, `Scout Name`, `Den Leader`, and `Cubmaster` via tuned coordinate boxes with centered text.
 - Wolf rank signature rendering caps script size for legibility on the small printed lines.
 - CI workflow: `.github/workflows/ci.yml` runs install + smoke checks.
 - Deploy workflow: `.github/workflows/deploy-cloud-run.yml` deploys to Cloud Run on `main` when required GitHub Variables/Secrets are set.

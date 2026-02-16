@@ -132,30 +132,39 @@ function renderLivePreview() {
     payload.scriptFont === "None"
       ? regularFamily
       : fontPreviewMap[payload.scriptFont] || "inherit";
+  const regularCssFamily = regularFamily.replaceAll("\"", "'");
+  const scriptCssFamily = scriptFamily.replaceAll("\"", "'");
   const regularSize = Number.parseFloat(payload.fontSize) || 9;
   const scriptSize = Number.parseFloat(payload.scriptFontSize) || regularSize;
+  const esc = (value) =>
+    String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll("\"", "&quot;")
+      .replaceAll("'", "&#39;");
   livePreview.innerHTML = `
     <div class="preview-meta">
-      <span>${previewData.date}</span>
-      <span>${previewData.pack}</span>
+      <span>${esc(previewData.date)}</span>
+      <span>${esc(previewData.pack)}</span>
     </div>
     <h3 class="preview-title">Cub Scout Award Certificate</h3>
-    <p class="preview-line" style="font-family:${regularFamily};font-size:${regularSize}px;">
-      ${previewData.scout}
+    <p class="preview-line" style="font-family:${regularCssFamily};font-size:${regularSize}px;">
+      ${esc(previewData.scout)}
     </p>
-    <p class="preview-line" style="font-family:${regularFamily};font-size:${regularSize}px;">
-      for completing ${previewData.award}
+    <p class="preview-line" style="font-family:${regularCssFamily};font-size:${regularSize}px;">
+      for completing ${esc(previewData.award)}
     </p>
     <div class="preview-sig-row">
       <div class="preview-sig">
-        <div class="preview-sig-name" style="font-family:${scriptFamily};font-size:${scriptSize}px;">
-          ${previewData.denLeader}
+        <div class="preview-sig-name" style="font-family:${scriptCssFamily};font-size:${scriptSize}px;">
+          ${esc(previewData.denLeader)}
         </div>
         <div class="preview-sig-label">Den Leader</div>
       </div>
       <div class="preview-sig">
-        <div class="preview-sig-name" style="font-family:${scriptFamily};font-size:${scriptSize}px;">
-          ${previewData.cubmaster}
+        <div class="preview-sig-name" style="font-family:${scriptCssFamily};font-size:${scriptSize}px;">
+          ${esc(previewData.cubmaster)}
         </div>
         <div class="preview-sig-label">Cubmaster</div>
       </div>

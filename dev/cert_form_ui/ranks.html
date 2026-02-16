@@ -14,7 +14,7 @@
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body data-workflow="ranks">
     <div class="bg"></div>
     <header class="topbar">
       <a class="brand" href="/">Cub Scout Awards</a>
@@ -42,22 +42,42 @@
     <main class="page">
       <header class="hero">
         <div class="badge">Ranks</div>
-        <h1>Rank Workflow</h1>
+        <h1>Rank Advancement Generator</h1>
         <p>
-          Work on rank templates in a dedicated page that mirrors the Adventure workflow
-          layout. Start with rank selection and template downloads.
+          This follows the same flow as Adventures: upload CSV, tune fonts, preview output,
+          and generate files. Select a rank to drive template selection.
         </p>
       </header>
 
       <section class="card">
         <div class="card-header">
           <h2>Inputs</h2>
-          <p>Select a rank to view template status and download available CSV templates.</p>
+          <p>
+            Rank CSV headers: Date, Pack Number, Scout Name, Rank, Den Leader, Cubmaster.
+            Optional: Den Number.
+          </p>
         </div>
 
         <div class="grid">
           <label class="field">
-            <span>Rank</span>
+            <span>CSV file</span>
+            <div class="dropzone" id="csvDrop">
+              <input type="file" id="csvFile" accept=".csv" />
+              <div>
+                <strong>Drag & drop</strong> or click to browse
+                <small id="csvName">No file selected</small>
+              </div>
+            </div>
+            <a class="template-link" id="rankTemplateLink" href="/wolf_rank_template.csv" download>
+              Download Wolf Rank CSV Template
+            </a>
+            <small class="field-note" id="rankTemplateNote">
+              Wolf template is available now. Other rank templates can still be uploaded manually.
+            </small>
+          </label>
+
+          <label class="field">
+            <span>Rank (template selector)</span>
             <select id="rankSelect">
               <option value="Lion">Lion</option>
               <option value="Tiger">Tiger</option>
@@ -69,47 +89,107 @@
           </label>
 
           <label class="field">
-            <span>Current Wolf template</span>
-            <a class="template-link" href="/wolf_rank_template.csv" download>
-              Download Wolf Rank CSV Template
-            </a>
+            <span>Font (all fields)</span>
+            <select id="fontName">
+              <option value="Helvetica">Helvetica</option>
+              <option value="TimesRoman">Times Roman</option>
+              <option value="Courier">Courier</option>
+              <option value="Alegreya">Alegreya (Google Fonts)</option>
+              <option value="Archivo">Archivo (Google Fonts)</option>
+              <option value="FiraSans">Fira Sans (Google Fonts)</option>
+              <option value="Bangers">Bangers (Google Fonts)</option>
+              <option value="CabinSketch">Cabin Sketch (Google Fonts)</option>
+              <option value="LilitaOne">Lilita One (Google Fonts)</option>
+              <option value="Righteous">Righteous (Google Fonts)</option>
+              <option value="Oswald">Oswald (Google Fonts)</option>
+              <option value="Montserrat">Montserrat (Google Fonts)</option>
+              <option value="Kanit">Kanit (Google Fonts)</option>
+              <option value="Lora">Lora (Google Fonts)</option>
+              <option value="CrimsonPro">Crimson Pro (Google Fonts)</option>
+              <option value="IBMPlexSerif">IBM Plex Serif (Google Fonts)</option>
+              <option value="Merriweather">Merriweather (Google Fonts)</option>
+              <option value="DejaVuSerif">DejaVu Serif</option>
+              <option value="DejaVuSans">DejaVu Sans</option>
+              <option value="DejaVuSansMono">DejaVu Sans Mono</option>
+            </select>
+            <div class="font-sample" id="fontSample">Piney Knotts · Wolf</div>
           </label>
 
           <label class="field">
-            <span>Adventure workflow</span>
-            <a class="template-link" href="/adventures">Open Adventures Generator</a>
+            <span>Den Leader / Cubmaster (cursive)</span>
+            <select id="scriptFont">
+              <option value="PatrickHand">Patrick Hand (Google Fonts)</option>
+              <option value="PermanentMarker">Permanent Marker (Google Fonts)</option>
+              <option value="DancingScript">Dancing Script (Google Fonts)</option>
+              <option value="Caveat">Caveat (Google Fonts)</option>
+              <option value="KaushanScript">Kaushan Script (Google Fonts)</option>
+              <option value="DejaVuSerifItalic">DejaVu Serif Italic</option>
+              <option value="DejaVuSansOblique">DejaVu Sans Oblique</option>
+              <option value="None">Disable</option>
+            </select>
+            <div class="font-sample script" id="scriptSample">Ranger Barkley · Twig Timberly</div>
+          </label>
+
+          <label class="field">
+            <span>Shift toward barcode (inches)</span>
+            <input type="number" step="0.1" value="0.5" id="shiftLeft" />
+          </label>
+
+          <label class="field">
+            <span>Shift down (inches)</span>
+            <input type="number" step="0.1" value="0.5" id="shiftDown" />
+          </label>
+
+          <label class="field">
+            <span>Font size</span>
+            <input type="number" step="0.5" value="14" id="fontSize" />
+          </label>
+
+          <label class="field">
+            <span>Script font size</span>
+            <input type="number" step="0.5" value="24" id="scriptFontSize" />
+          </label>
+
+          <label class="field">
+            <span>Output name</span>
+            <input type="text" value="filled_ranks.pdf" id="outputName" />
+          </label>
+
+          <label class="field">
+            <span>Output mode</span>
+            <select id="outputMode">
+              <option value="combined_pdf">All scouts (one combined PDF)</option>
+              <option value="per_scout_zip">Batched by scout (ZIP)</option>
+            </select>
           </label>
         </div>
 
-        <div class="rank-grid" id="rankGrid">
-          <button type="button" class="rank-chip" data-rank="Lion">Lion</button>
-          <button type="button" class="rank-chip" data-rank="Tiger">Tiger</button>
-          <button type="button" class="rank-chip active" data-rank="Wolf">Wolf</button>
-          <button type="button" class="rank-chip" data-rank="Bear">Bear</button>
-          <button type="button" class="rank-chip" data-rank="Webelo">Webelo</button>
-          <button type="button" class="rank-chip" data-rank="Arrow of Light">Arrow of Light</button>
+        <div class="actions">
+          <button class="ghost" id="validateBtn">Validate CSV</button>
+          <button class="primary" id="generateBtn">Generate File</button>
         </div>
+
+        <div class="status" id="status"></div>
       </section>
 
       <section class="card outline">
         <div class="card-header">
           <h2>Output</h2>
-          <p>Selected rank details and template readiness.</p>
+          <p>Live preview updates as you change settings. Generate when ready to download.</p>
         </div>
-        <div class="output">
-          <div class="download-panel" id="rankSummary">
-            <strong>Wolf</strong>
-            <p style="margin: 6px 0; color: #64748b;">Wolf CSV template is available now.</p>
-            <a id="rankTemplateLink" href="/wolf_rank_template.csv" download>Download Wolf Rank CSV Template</a>
-            <p id="rankTemplateStatus" style="margin: 8px 0 0; color: #64748b; font-size: 0.85rem;">
-              Source PDF appears non-fillable, so template is derived from visible placeholders.
-            </p>
+        <div class="output" id="outputArea">
+          <div class="download-panel" id="validationPanel">
+            <div class="placeholder">Run CSV validation to see row-level checks.</div>
+          </div>
+          <div class="preview-sheet" id="livePreview"></div>
+          <div class="download-panel" id="downloadPanel">
+            <div class="placeholder">No PDF generated yet</div>
           </div>
         </div>
       </section>
     </main>
 
     <script src="nav.js"></script>
-    <script src="ranks.js"></script>
+    <script src="app.js"></script>
   </body>
 </html>

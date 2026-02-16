@@ -20,30 +20,68 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    if: ${{ vars.GCP_PROJECT_ID != '' && vars.CLOUD_RUN_SERVICE != '' && secrets.GCP_WORKLOAD_IDENTITY_PROVIDER != '' && secrets.GCP_SERVICE_ACCOUNT != '' }}
 
     env:
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
-      CLOUD_RUN_SERVICE: ${{ github.event.inputs.service || vars.CLOUD_RUN_SERVICE }}
-      CLOUD_RUN_REGION: ${{ github.event.inputs.region || vars.CLOUD_RUN_REGION || 'us-central1' }}
+      CLOUD_RUN_SERVICE: ${{ vars.CLOUD_RUN_SERVICE }}
+      CLOUD_RUN_REGION: ${{ vars.CLOUD_RUN_REGION || 'us-central1' }}
       CLOUD_BUILD_SERVICE_ACCOUNT: ${{ vars.CLOUD_BUILD_SERVICE_ACCOUNT }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Apply manual overrides
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          if [ -n "${{ github.event.inputs.service }}" ]; then
+            echo "CLOUD_RUN_SERVICE=${{ github.event.inputs.service }}" >> "$GITHUB_ENV"
+          fi
+          if [ -n "${{ github.event.inputs.region }}" ]; then
+            echo "CLOUD_RUN_REGION=${{ github.event.inputs.region }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Verify deploy configuration
+        id: config
+        env:
+          GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+        run: |
+          MISSING=""
+          [ -z "${GCP_PROJECT_ID}" ] && MISSING="${MISSING} GCP_PROJECT_ID"
+          [ -z "${CLOUD_RUN_SERVICE}" ] && MISSING="${MISSING} CLOUD_RUN_SERVICE"
+          [ -z "${GCP_WORKLOAD_IDENTITY_PROVIDER}" ] && MISSING="${MISSING} GCP_WORKLOAD_IDENTITY_PROVIDER"
+          [ -z "${GCP_SERVICE_ACCOUNT}" ] && MISSING="${MISSING} GCP_SERVICE_ACCOUNT"
+
+          if [ -n "${MISSING}" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "missing=${MISSING}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Explain missing configuration
+        if: ${{ steps.config.outputs.ready != 'true' }}
+        run: |
+          echo "Deploy skipped: missing required GitHub Variables/Secrets:${{ steps.config.outputs.missing }}"
+          echo "Required Variables: GCP_PROJECT_ID, CLOUD_RUN_SERVICE (optional CLOUD_RUN_REGION, CLOUD_BUILD_SERVICE_ACCOUNT)"
+          echo "Required Secrets: GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_SERVICE_ACCOUNT"
+
       - name: Authenticate to Google Cloud
+        if: ${{ steps.config.outputs.ready == 'true' }}
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - name: Setup gcloud
+        if: ${{ steps.config.outputs.ready == 'true' }}
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
 
       - name: Deploy to Cloud Run
+        if: ${{ steps.config.outputs.ready == 'true' }}
         run: |
           EXTRA_FLAGS=""
           if [ -n "${CLOUD_BUILD_SERVICE_ACCOUNT}" ]; then
@@ -58,17 +96,8 @@ jobs:
             ${EXTRA_FLAGS}
 
       - name: Show service URL
+        if: ${{ steps.config.outputs.ready == 'true' }}
         run: |
           gcloud run services describe "${CLOUD_RUN_SERVICE}" \
             --region "${CLOUD_RUN_REGION}" \
             --format='value(status.url)'
-
-  deploy-config-missing:
-    runs-on: ubuntu-latest
-    if: ${{ !(vars.GCP_PROJECT_ID != '' && vars.CLOUD_RUN_SERVICE != '' && secrets.GCP_WORKLOAD_IDENTITY_PROVIDER != '' && secrets.GCP_SERVICE_ACCOUNT != '') }}
-    steps:
-      - name: Explain missing configuration
-        run: |
-          echo "Deploy skipped: missing required GitHub Variables/Secrets."
-          echo "Required Variables: GCP_PROJECT_ID, CLOUD_RUN_SERVICE (optional CLOUD_RUN_REGION, CLOUD_BUILD_SERVICE_ACCOUNT)"
-          echo "Required Secrets: GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_SERVICE_ACCOUNT"

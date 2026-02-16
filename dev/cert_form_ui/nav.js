@@ -12,6 +12,8 @@ if (menuToggle && menuPanel) {
     menuToggle.setAttribute("aria-expanded", "true");
   };
 
+  closeMenu();
+
   menuToggle.addEventListener("click", () => {
     const isOpen = menuToggle.getAttribute("aria-expanded") === "true";
     if (isOpen) {

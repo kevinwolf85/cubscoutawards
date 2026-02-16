@@ -11,11 +11,16 @@ from dev.cert_form_ui.server import app
 def main() -> None:
     client = app.test_client()
     csv_path = Path("dev/cert_form_ui/cub_scout_award_template.csv")
+    rank_csv_path = Path("dev/cert_form_ui/wolf_rank_template.csv")
     if not csv_path.exists():
         raise SystemExit(f"Missing CSV template: {csv_path}")
+    if not rank_csv_path.exists():
+        raise SystemExit(f"Missing rank CSV template: {rank_csv_path}")
 
     with csv_path.open("rb") as f:
         csv_bytes = f.read()
+    with rank_csv_path.open("rb") as f:
+        rank_csv_bytes = f.read()
 
     validate_payload = {"csv": (io.BytesIO(csv_bytes), "input.csv")}
     validate_response = client.post("/validate-csv", data=validate_payload, content_type="multipart/form-data")
@@ -65,6 +70,40 @@ def main() -> None:
     zf = zipfile.ZipFile(io.BytesIO(zip_response.data))
     if not zf.namelist():
         raise SystemExit("ZIP smoke test failed: archive is empty")
+
+    rank_validate_payload = {
+        "csv": (io.BytesIO(rank_csv_bytes), "rank_input.csv"),
+        "workflow": "ranks",
+        "rank": "Wolf",
+    }
+    rank_validate_response = client.post(
+        "/validate-csv",
+        data=rank_validate_payload,
+        content_type="multipart/form-data",
+    )
+    if rank_validate_response.status_code != 200:
+        raise SystemExit(f"Rank validate smoke test failed: status={rank_validate_response.status_code}")
+
+    rank_payload = {
+        "csv": (io.BytesIO(rank_csv_bytes), "rank_input.csv"),
+        "workflow": "ranks",
+        "rank": "Wolf",
+        "fontName": "Merriweather",
+        "scriptFont": "DancingScript",
+        "shiftLeft": "0.5",
+        "shiftDown": "0.5",
+        "fontSize": "14",
+        "scriptFontSize": "24",
+        "outputName": "ci_rank_smoke.pdf",
+        "outputMode": "combined_pdf",
+    }
+    rank_response = client.post("/generate", data=rank_payload, content_type="multipart/form-data")
+    if rank_response.status_code != 200:
+        raise SystemExit(f"Rank PDF smoke test failed: status={rank_response.status_code}")
+    if rank_response.headers.get("Content-Type") != "application/pdf":
+        raise SystemExit(f"Rank PDF smoke test failed: content-type={rank_response.headers.get('Content-Type')}")
+    if len(rank_response.data) < 2048:
+        raise SystemExit(f"Rank PDF smoke test failed: output too small ({len(rank_response.data)} bytes)")
 
     print("Smoke tests passed.")
 

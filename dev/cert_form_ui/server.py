@@ -20,6 +20,16 @@ REPO_ROOT = UI_DIR.parent.parent
 DEFAULT_TEMPLATE_PATH = REPO_ROOT / "assets" / "templates" / "cub_scout_award_certificate.pdf"
 FONTS_DIR = REPO_ROOT / "assets" / "fonts"
 TEMPLATE_PATH = Path(os.environ.get("CERT_TEMPLATE_PATH", str(DEFAULT_TEMPLATE_PATH))).expanduser()
+RANK_TEMPLATE_PATHS = {
+    "Lion": Path(os.environ.get("CERT_TEMPLATE_PATH_LION", str(DEFAULT_TEMPLATE_PATH))).expanduser(),
+    "Tiger": Path(os.environ.get("CERT_TEMPLATE_PATH_TIGER", str(DEFAULT_TEMPLATE_PATH))).expanduser(),
+    "Wolf": Path(os.environ.get("CERT_TEMPLATE_PATH_WOLF", str(DEFAULT_TEMPLATE_PATH))).expanduser(),
+    "Bear": Path(os.environ.get("CERT_TEMPLATE_PATH_BEAR", str(DEFAULT_TEMPLATE_PATH))).expanduser(),
+    "Webelo": Path(os.environ.get("CERT_TEMPLATE_PATH_WEBELO", str(DEFAULT_TEMPLATE_PATH))).expanduser(),
+    "Arrow of Light": Path(
+        os.environ.get("CERT_TEMPLATE_PATH_ARROW_OF_LIGHT", str(DEFAULT_TEMPLATE_PATH))
+    ).expanduser(),
+}
 
 try:
     from dev.fill_cub_scout_certs import fill_certificates
@@ -35,7 +45,10 @@ except ModuleNotFoundError:
 app = Flask(__name__, static_folder=str(UI_DIR), static_url_path="")
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5 MB CSV upload limit
 
-REQUIRED_HEADERS = ["Date", "Pack Number", "Scout Name", "Award Name", "Den Leader", "Cubmaster"]
+GENERATOR_HEADERS = ["Date", "Pack Number", "Scout Name", "Award Name", "Den Leader", "Cubmaster"]
+COMMON_REQUIRED_HEADERS = ["Date", "Pack Number", "Scout Name", "Den Leader", "Cubmaster"]
+ADVENTURE_REQUIRED_HEADERS = COMMON_REQUIRED_HEADERS + ["Award Name"]
+RANK_REQUIRED_HEADERS = COMMON_REQUIRED_HEADERS + ["Rank"]
 DATE_FORMATS = ("%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y")
 GENERATE_PER_MINUTE = int(os.environ.get("RATE_LIMIT_GENERATE_PER_MINUTE", "12"))
 VALIDATE_PER_MINUTE = int(os.environ.get("RATE_LIMIT_VALIDATE_PER_MINUTE", "30"))
@@ -216,6 +229,55 @@ def _is_valid_date(value: str) -> bool:
     return False
 
 
+def _canonical_rank(value: str) -> str:
+    raw = (value or "").strip().lower()
+    aliases = {
+        "lion": "Lion",
+        "tiger": "Tiger",
+        "wolf": "Wolf",
+        "bear": "Bear",
+        "webelo": "Webelo",
+        "webelos": "Webelo",
+        "arrow of light": "Arrow of Light",
+        "arrow_of_light": "Arrow of Light",
+        "aol": "Arrow of Light",
+    }
+    return aliases.get(raw, "Wolf")
+
+
+def _selected_template(workflow: str, selected_rank: str) -> Path:
+    if workflow != "ranks":
+        return TEMPLATE_PATH
+    rank_key = _canonical_rank(selected_rank)
+    rank_template = RANK_TEMPLATE_PATHS.get(rank_key, TEMPLATE_PATH)
+    if rank_template.exists():
+        return rank_template
+    return TEMPLATE_PATH
+
+
+def _normalize_rows_for_generator(
+    rows: list[dict[str, str]], workflow: str, selected_rank: str
+) -> list[dict[str, str]]:
+    normalized_rows: list[dict[str, str]] = []
+    canonical_rank = _canonical_rank(selected_rank) if workflow == "ranks" else ""
+    for row in rows:
+        award_name = (row.get("Award Name") or "").strip()
+        rank_name = (row.get("Rank") or "").strip()
+        if workflow == "ranks":
+            award_name = rank_name or canonical_rank or award_name
+        normalized_rows.append(
+            {
+                "Date": (row.get("Date") or "").strip(),
+                "Pack Number": (row.get("Pack Number") or "").strip(),
+                "Scout Name": (row.get("Scout Name") or "").strip(),
+                "Award Name": award_name,
+                "Den Leader": (row.get("Den Leader") or "").strip(),
+                "Cubmaster": (row.get("Cubmaster") or "").strip(),
+            }
+        )
+    return normalized_rows
+
+
 def _parse_csv_bytes(csv_bytes: bytes) -> tuple[list[str], list[dict[str, str]]]:
     text = csv_bytes.decode("utf-8-sig")
     reader = csv.DictReader(io.StringIO(text))
@@ -225,24 +287,33 @@ def _parse_csv_bytes(csv_bytes: bytes) -> tuple[list[str], list[dict[str, str]]]
     return list(reader.fieldnames), rows
 
 
-def _build_validation_report(fieldnames: list[str], rows: list[dict[str, str]]) -> dict[str, object]:
+def _build_validation_report(
+    fieldnames: list[str], rows: list[dict[str, str]], workflow: str, selected_rank: str
+) -> dict[str, object]:
     errors: list[str] = []
     warnings: list[str] = []
-    missing = [h for h in REQUIRED_HEADERS if h not in fieldnames]
+    required_headers = ADVENTURE_REQUIRED_HEADERS if workflow != "ranks" else RANK_REQUIRED_HEADERS
+    missing = [h for h in required_headers if h not in fieldnames]
+    if workflow == "ranks" and "Rank" in missing and selected_rank:
+        missing.remove("Rank")
     if missing:
         errors.append(f"Missing required headers: {', '.join(missing)}")
     if not rows:
         errors.append("CSV has no data rows.")
 
+    rank_fallback = _canonical_rank(selected_rank) if workflow == "ranks" else ""
     for idx, row in enumerate(rows, start=2):
         scout_name = (row.get("Scout Name") or "").strip()
         award_name = (row.get("Award Name") or "").strip()
+        if workflow == "ranks":
+            award_name = (row.get("Rank") or "").strip() or rank_fallback or award_name
         pack_number = (row.get("Pack Number") or "").strip()
         date_value = (row.get("Date") or "").strip()
         if not scout_name:
             errors.append(f"Row {idx}: Scout Name is required.")
         if not award_name:
-            errors.append(f"Row {idx}: Award Name is required.")
+            label = "Rank" if workflow == "ranks" else "Award Name"
+            errors.append(f"Row {idx}: {label} is required.")
         if not pack_number:
             warnings.append(f"Row {idx}: Pack Number is empty.")
         if date_value and not _is_valid_date(date_value):
@@ -275,13 +346,16 @@ def validate_csv():
         payload, code = _csv_missing_response()
         return jsonify(payload), code
 
+    workflow = request.form.get("workflow", "adventures")
+    selected_rank = request.form.get("rank", "")
+
     try:
         csv_bytes = csv_file.read()
         fieldnames, rows = _parse_csv_bytes(csv_bytes)
     except UnicodeDecodeError:
         return jsonify({"error": "CSV must be UTF-8 encoded."}), 400
 
-    report = _build_validation_report(fieldnames, rows)
+    report = _build_validation_report(fieldnames, rows, workflow=workflow, selected_rank=selected_rank)
     return jsonify(report)
 
 
@@ -307,9 +381,12 @@ def generate_pdf():
     font_size = _parse_float(request.form.get("fontSize", "14"), fallback=14.0)
     script_font_size = _parse_float(request.form.get("scriptFontSize", "24"), fallback=24.0)
     output_mode = request.form.get("outputMode", "combined_pdf")
+    workflow = request.form.get("workflow", "adventures")
+    selected_rank = request.form.get("rank", "")
     output_name = _safe_output_name(request.form.get("outputName", "filled_awards.pdf"))
+    template_path = _selected_template(workflow, selected_rank)
 
-    if not TEMPLATE_PATH.exists():
+    if not template_path.exists():
         return jsonify({"error": "Template PDF not configured on server."}), 500
 
     try:
@@ -318,9 +395,10 @@ def generate_pdf():
     except UnicodeDecodeError:
         return jsonify({"error": "CSV must be UTF-8 encoded."}), 400
 
-    report = _build_validation_report(fieldnames, rows)
+    report = _build_validation_report(fieldnames, rows, workflow=workflow, selected_rank=selected_rank)
     if not report["ok"]:
         return jsonify({"error": "CSV validation failed.", "report": report}), 400
+    normalized_rows = _normalize_rows_for_generator(rows, workflow=workflow, selected_rank=selected_rank)
 
     font_name, font_file = _resolve_font_choice(font_choice, FONT_CHOICES)
     if not font_name:
@@ -331,26 +409,30 @@ def generate_pdf():
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir_path = Path(tmpdir)
         csv_path = tmpdir_path / "input.csv"
-        csv_path.write_bytes(csv_bytes)
+        with csv_path.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=GENERATOR_HEADERS)
+            writer.writeheader()
+            for row in normalized_rows:
+                writer.writerow({k: row.get(k, "") for k in GENERATOR_HEADERS})
 
         if output_mode == "per_scout_zip":
             zip_name = _safe_zip_name(request.form.get("outputName", "scout_awards.zip"))
             zip_path = tmpdir_path / zip_name
             with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-                for i, row in enumerate(rows, start=1):
+                for i, row in enumerate(normalized_rows, start=1):
                     scout = _safe_base_name(row.get("Scout Name", "scout"))
                     award = _safe_base_name(row.get("Award Name", "award"))
                     file_stem = f"{i:03d}_{scout}_{award}"
                     row_csv = tmpdir_path / f"{file_stem}.csv"
                     row_pdf = tmpdir_path / f"{file_stem}.pdf"
                     with row_csv.open("w", newline="", encoding="utf-8") as f:
-                        writer = csv.DictWriter(f, fieldnames=REQUIRED_HEADERS)
+                        writer = csv.DictWriter(f, fieldnames=GENERATOR_HEADERS)
                         writer.writeheader()
-                        writer.writerow({k: row.get(k, "") for k in REQUIRED_HEADERS})
+                        writer.writerow({k: row.get(k, "") for k in GENERATOR_HEADERS})
                     fill_certificates(
                         csv_path=row_csv,
                         output_path=row_pdf,
-                        template_path=TEMPLATE_PATH,
+                        template_path=template_path,
                         shift_left_inch=shift_left,
                         shift_down_inch=shift_down,
                         font_name=font_name,
@@ -373,7 +455,7 @@ def generate_pdf():
         fill_certificates(
             csv_path=csv_path,
             output_path=out_path,
-            template_path=TEMPLATE_PATH,
+            template_path=template_path,
             shift_left_inch=shift_left,
             shift_down_inch=shift_down,
             font_name=font_name,

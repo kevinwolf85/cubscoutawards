@@ -6,7 +6,7 @@ Generate Cub Scout award certificates from a CSV and a fillable PDF template. In
 - `dev/fill_cub_scout_certs.py`: CSV -> filled PDF generator
 - `dev/cert_form_ui/`: Frontend + Flask backend
   - `index.html` (home), `adventures.html`, `ranks.html`
-  - `styles.css`, `nav.js`, `app.js`, `ranks.js`
+  - `styles.css`, `nav.js`, `app.js`
   - `server.py`
   - `cub_scout_award_template.csv`
 
@@ -50,6 +50,7 @@ Rank template currently available:
 - `dev/cert_form_ui/wolf_rank_template.csv`
   - Derived from visible placeholder labels in `/Users/kevinwolf/Downloads/34220(15)FillTempl-WOLF.pdf`.
   - The Wolf PDF appears non-fillable (no AcroForm fields detected), so this CSV is for rank workflow planning/template prep.
+  - Rank workflow accepts `Rank` (or `Award Name`) and maps it to generated output text.
 
 ## Template PDF
 The generator uses a fillable PDF template. The path is currently hardcoded in:
@@ -58,6 +59,14 @@ The generator uses a fillable PDF template. The path is currently hardcoded in:
 You can override with:
 - `CERT_TEMPLATE_PATH` (web server env var)
 - `--template` (CLI flag)
+
+Optional per-rank server template overrides:
+- `CERT_TEMPLATE_PATH_LION`
+- `CERT_TEMPLATE_PATH_TIGER`
+- `CERT_TEMPLATE_PATH_WOLF`
+- `CERT_TEMPLATE_PATH_BEAR`
+- `CERT_TEMPLATE_PATH_WEBELO`
+- `CERT_TEMPLATE_PATH_ARROW_OF_LIGHT`
 
 ## CLI Usage
 ```sh
@@ -90,6 +99,7 @@ cubscout-awards \
 - Output modes:
   - `combined_pdf` (single merged PDF)
   - `per_scout_zip` (ZIP containing one PDF per scout)
+- Ranks page uses the same controls as Adventures (CSV upload, fonts, shifts, validation, output modes) plus a `Rank` selector that drives template selection.
 - Basic per-IP rate limiting is enabled for public safety:
   - `RATE_LIMIT_GENERATE_PER_MINUTE` (default `12`)
   - `RATE_LIMIT_VALIDATE_PER_MINUTE` (default `30`)

@@ -79,6 +79,7 @@ Optional per-rank server template overrides:
 
 When a selected rank template has no AcroForm fields, the server automatically falls back to coordinate-based rendering (`fill_rank_cards`).
 Rank outputs are rotated by default for print orientation (`RANK_OUTPUT_ROTATION_DEGREES=90`).
+Shift behavior is rotation-aware for ranks: `Shift Left` / `Shift Down` are interpreted in final display space (matching Adventures), even when source rank templates have mixed native `/Rotate` values.
 
 ## CLI Usage
 ```sh
@@ -114,6 +115,7 @@ cubscout-awards \
 - Ranks page uses the same controls as Adventures (CSV upload, fonts, shifts, validation, output modes) plus a `Rank` selector that drives template selection.
 - Wolf rank rendering uses tuned coordinates and centered text boxes for `Den Number`, `Pack Number`, `Date`, `Scout Name`, `Den Leader`, and `Cubmaster` so placement behavior matches Adventures more closely.
 - On Wolf rank cards, signature text size is capped for readability to avoid collisions with static labels.
+- Rank shift controls (`Shift Left`, `Shift Down`) now follow the same display-direction mapping as Adventures.
 - Basic per-IP rate limiting is enabled for public safety:
   - `RATE_LIMIT_GENERATE_PER_MINUTE` (default `12`)
   - `RATE_LIMIT_VALIDATE_PER_MINUTE` (default `30`)

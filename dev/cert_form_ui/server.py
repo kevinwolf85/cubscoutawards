@@ -455,6 +455,12 @@ def generate_pdf():
     normalized_rows = _normalize_rows_for_generator(rows, workflow=workflow, selected_rank=selected_rank)
     use_rank_layout = workflow == "ranks" and not _template_supports_field_fill(template_path)
     fill_function = fill_rank_cards if use_rank_layout else fill_certificates
+    fill_kwargs: dict[str, object] = {}
+    if workflow == "ranks":
+        # Rank templates can have mixed native /Rotate metadata.
+        # Use the target final rotation for shift mapping so "left/down" behave in display space
+        # the same way users experience it on Adventures.
+        fill_kwargs["output_rotation_degrees"] = RANK_OUTPUT_ROTATION_DEGREES
 
     font_name, font_file = _resolve_font_choice(font_choice, FONT_CHOICES)
     if not font_name:
@@ -497,6 +503,7 @@ def generate_pdf():
                         script_font_size=script_font_size,
                         font_file=font_file,
                         script_font_file=script_font_file,
+                        **fill_kwargs,
                     )
                     if workflow == "ranks":
                         _normalize_pdf_rotation_in_place(row_pdf, RANK_OUTPUT_ROTATION_DEGREES)
@@ -522,6 +529,7 @@ def generate_pdf():
             script_font_size=script_font_size,
             font_file=font_file,
             script_font_file=script_font_file,
+            **fill_kwargs,
         )
         if workflow == "ranks":
             _normalize_pdf_rotation_in_place(out_path, RANK_OUTPUT_ROTATION_DEGREES)

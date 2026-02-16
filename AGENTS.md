@@ -56,6 +56,7 @@ cubscout-awards --csv /path/to/awards.csv --output /path/to/filled_awards.pdf
 - Wolf rank cards render `Den Number`, `Pack Number`, `Date`, `Scout Name`, `Den Leader`, and `Cubmaster` via tuned coordinate boxes with centered text.
 - Wolf rank signature rendering caps script size for legibility on the small printed lines.
 - Rank exports are rotated by default for print-friendly orientation (`RANK_OUTPUT_ROTATION_DEGREES=90`).
+- Rank shift mapping is display-space aware (aligned with Adventures), so UI `Shift Left`/`Shift Down` semantics remain consistent across rotated templates.
 - CI workflow: `.github/workflows/ci.yml` runs install + smoke checks.
 - Deploy workflow: `.github/workflows/deploy-cloud-run.yml` deploys to Cloud Run on `main` when required GitHub Variables/Secrets are set.
 - Package publish workflow: `.github/workflows/publish-ghcr.yml` publishes `ghcr.io/<owner>/cubscoutawards` on pushes to `main`.

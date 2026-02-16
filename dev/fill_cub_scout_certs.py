@@ -232,6 +232,7 @@ def fill_certificates(
     script_font_size: float | None = None,
     font_file: str | None = None,
     script_font_file: str | None = None,
+    output_rotation_degrees: int | None = None,
 ) -> None:
     if not template_path.exists():
         raise FileNotFoundError(f"Template PDF not found: {template_path}")
@@ -279,7 +280,7 @@ def fill_certificates(
         overlay_page = PdfReader(io.BytesIO(overlay_pdf)).pages[0]
         page.merge_page(overlay_page)
 
-        rotate = page.get("/Rotate") or 0
+        rotate = output_rotation_degrees if output_rotation_degrees is not None else (page.get("/Rotate") or 0)
         tx, ty = _map_display_shift_to_page(rotate, dx_display, dy_display)
         if tx or ty:
             page.add_transformation(Transformation().translate(tx=tx, ty=ty))

@@ -14,7 +14,7 @@ from reportlab.pdfgen import canvas
 CARDS_PER_PAGE = 8
 CARD_ANCHOR_X = 52.6
 CARD_X_STEP = 180.0
-CARD_ANCHORS = [
+DEFAULT_CARD_ANCHORS = [
     (CARD_ANCHOR_X + CARD_X_STEP * col, 360.0) for col in range(4)
 ] + [
     (CARD_ANCHOR_X + CARD_X_STEP * col, 90.0) for col in range(4)
@@ -22,13 +22,40 @@ CARD_ANCHORS = [
 
 # Coordinates are tuned against 34220(15)FillTempl-WOLF.pdf (landscape sheet of 8 cards)
 FIELD_LAYOUT = {
-    "den_number": {"x": 60.0, "y": 16.0, "max_width": 84.0, "size": 7.5},
-    "pack_number": {"x": 60.0, "y": 53.0, "max_width": 84.0, "size": 7.5},
-    "date": {"x": 60.0, "y": 91.0, "max_width": 84.0, "size": 7.0},
+    "den_number": {"x": 60.0, "y": 24.0, "max_width": 84.0, "size": 6.0},
+    "pack_number": {"x": 60.0, "y": 74.0, "max_width": 84.0, "size": 6.0},
+    "date": {"x": 60.0, "y": 120.0, "max_width": 84.0, "size": 6.0},
     "name": {"x": 124.0, "y": -8.0, "width": 105.0, "height": 16.0, "size": 10.5, "max_size": 16.0},
     "den_leader": {"x": 72.0, "y": 20.5, "width": 106.0, "height": 10.0, "size": 8.0, "max_size": 9.0},
     "cubmaster": {"x": 89.0, "y": 5.5, "width": 106.0, "height": 10.0, "size": 8.0, "max_size": 9.0},
 }
+
+
+def _extract_card_anchors(page) -> list[tuple[float, float]]:
+    hits: list[tuple[float, float]] = []
+
+    def visitor(text, cm, tm, font_dict, font_size):
+        t = (text or "").strip()
+        if "Den No." in t and "Pack No." in t and "Date" in t:
+            hits.append((float(tm[4]), float(tm[5])))
+
+    page.extract_text(visitor_text=visitor)
+    if len(hits) < CARDS_PER_PAGE:
+        return DEFAULT_CARD_ANCHORS
+
+    # Normalize to avoid tiny floating jitter from different source templates.
+    rounded = {(round(x, 2), round(y, 2)) for x, y in hits}
+    ys = sorted({y for _, y in rounded}, reverse=True)
+    if len(ys) < 2:
+        return DEFAULT_CARD_ANCHORS
+    top_y, bottom_y = ys[0], ys[-1]
+
+    top_row = sorted([p for p in rounded if p[1] == top_y], key=lambda p: p[0])
+    bottom_row = sorted([p for p in rounded if p[1] == bottom_y], key=lambda p: p[0])
+    if len(top_row) != 4 or len(bottom_row) != 4:
+        return DEFAULT_CARD_ANCHORS
+
+    return [(x, y) for x, y in top_row] + [(x, y) for x, y in bottom_row]
 
 
 def _read_rows(csv_path: Path) -> list[dict[str, str]]:
@@ -164,13 +191,14 @@ def fill_rank_cards(
     chunks = _chunk_rows(rows, CARDS_PER_PAGE)
     for chunk in chunks:
         page = PdfReader(str(template_path)).pages[0]
+        card_anchors = _extract_card_anchors(page)
         page_size = (float(page.mediabox.width), float(page.mediabox.height))
 
         overlay_buffer = io.BytesIO()
         c = canvas.Canvas(overlay_buffer, pagesize=page_size)
 
         for idx, row in enumerate(chunk):
-            anchor_x, anchor_y = CARD_ANCHORS[idx]
+            anchor_x, anchor_y = card_anchors[idx]
             den_number = (row.get("Den Number") or row.get("Den No.") or "").strip()
             pack_number = (row.get("Pack Number") or "").strip()
             date_value = _format_date(row.get("Date") or "")

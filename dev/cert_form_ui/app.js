@@ -27,34 +27,34 @@ const fields = {
 
 const rankTemplateMap = {
   Lion: {
-    csvHref: "",
-    linkLabel: "Lion CSV template coming soon",
-    note: "You can still upload your own Lion CSV while template files are being added.",
+    csvHref: "/rank_template.csv",
+    linkLabel: "Download Rank CSV Template",
+    note: "One shared rank CSV template works for all ranks.",
   },
   Tiger: {
-    csvHref: "",
-    linkLabel: "Tiger CSV template coming soon",
-    note: "You can still upload your own Tiger CSV while template files are being added.",
+    csvHref: "/rank_template.csv",
+    linkLabel: "Download Rank CSV Template",
+    note: "One shared rank CSV template works for all ranks.",
   },
   Wolf: {
-    csvHref: "/wolf_rank_template.csv",
-    linkLabel: "Download Wolf Rank CSV Template",
-    note: "Wolf template is available now. Other rank templates can still be uploaded manually.",
+    csvHref: "/rank_template.csv",
+    linkLabel: "Download Rank CSV Template",
+    note: "One shared rank CSV template works for all ranks.",
   },
   Bear: {
-    csvHref: "",
-    linkLabel: "Bear CSV template coming soon",
-    note: "You can still upload your own Bear CSV while template files are being added.",
+    csvHref: "/rank_template.csv",
+    linkLabel: "Download Rank CSV Template",
+    note: "One shared rank CSV template works for all ranks.",
   },
   Webelo: {
-    csvHref: "",
-    linkLabel: "Webelo CSV template coming soon",
-    note: "You can still upload your own Webelo CSV while template files are being added.",
+    csvHref: "/rank_template.csv",
+    linkLabel: "Download Rank CSV Template",
+    note: "One shared rank CSV template works for all ranks.",
   },
   "Arrow of Light": {
-    csvHref: "",
-    linkLabel: "Arrow of Light CSV template coming soon",
-    note: "You can still upload your own Arrow of Light CSV while template files are being added.",
+    csvHref: "/rank_template.csv",
+    linkLabel: "Download Rank CSV Template",
+    note: "One shared rank CSV template works for all ranks.",
   },
 };
 

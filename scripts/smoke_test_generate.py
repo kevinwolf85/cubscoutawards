@@ -11,7 +11,7 @@ from dev.cert_form_ui.server import app
 def main() -> None:
     client = app.test_client()
     csv_path = Path("dev/cert_form_ui/cub_scout_award_template.csv")
-    rank_csv_path = Path("dev/cert_form_ui/wolf_rank_template.csv")
+    rank_csv_path = Path("dev/cert_form_ui/rank_template.csv")
     if not csv_path.exists():
         raise SystemExit(f"Missing CSV template: {csv_path}")
     if not rank_csv_path.exists():

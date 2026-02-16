@@ -12,6 +12,7 @@ This repo contains a PDF certificate generator and a local web UI.
 - `dev/cert_form_ui/nav.js`: shared hamburger navigation logic
 - `dev/cert_form_ui/app.js`: shared generator UI logic for Adventures and Ranks
 - `dev/cert_form_ui/cub_scout_award_template.csv`: CSV template
+- `dev/cert_form_ui/rank_template.csv`: shared CSV template for all ranks
 - `dev/cert_form_ui/wolf_rank_template.csv`: initial Wolf rank CSV template
 
 ## Local Run

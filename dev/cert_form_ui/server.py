@@ -126,7 +126,7 @@ def generate_pdf():
     font_choice = request.form.get("fontName", "Helvetica")
     script_choice = request.form.get("scriptFont", "DejaVuSerifItalic")
     shift_left = _parse_float(request.form.get("shiftLeft", "0.5"), fallback=0.5)
-    shift_down = _parse_float(request.form.get("shiftDown", "0.0"), fallback=0.0)
+    shift_down = _parse_float(request.form.get("shiftDown", "0.5"), fallback=0.5)
     font_size = _parse_float(request.form.get("fontSize", "9"), fallback=9.0)
     output_name = _safe_output_name(request.form.get("outputName", "filled_awards.pdf"))
 

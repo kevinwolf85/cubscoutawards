@@ -5,11 +5,13 @@ if (menuToggle && menuPanel) {
   const closeMenu = () => {
     menuPanel.hidden = true;
     menuToggle.setAttribute("aria-expanded", "false");
+    menuToggle.classList.remove("is-open");
   };
 
   const openMenu = () => {
     menuPanel.hidden = false;
     menuToggle.setAttribute("aria-expanded", "true");
+    menuToggle.classList.add("is-open");
   };
 
   closeMenu();
@@ -43,3 +45,12 @@ if (menuToggle && menuPanel) {
     }
   });
 }
+
+document.querySelectorAll(".home-link").forEach((link) => {
+  link.addEventListener("click", () => {
+    link.classList.add("is-pressed");
+    setTimeout(() => {
+      link.classList.remove("is-pressed");
+    }, 140);
+  });
+});

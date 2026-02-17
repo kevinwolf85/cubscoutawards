@@ -35,15 +35,38 @@ def _field_name(base: str, index: int) -> str:
     return f"{base}_{index}"
 
 
-def _build_page_field_map(rows: list[dict[str, str]]) -> dict[str, str]:
+def _build_page_field_map(
+    rows: list[dict[str, str]], field_positions: dict[str, dict[str, object]]
+) -> dict[str, str]:
     field_map: dict[str, str] = {}
+    has_rank_fields = "Den No 1" in field_positions and "Childs name 1" in field_positions
+
     for i, row in enumerate(rows, start=1):
-        field_map[f"name {i}"] = row.get("Scout Name", "").strip()
-        field_map[_field_name("On", i)] = _format_date(row.get("Date", ""))
-        field_map[_field_name("Cub Scout Pack", i)] = row.get("Pack Number", "").strip()
-        field_map[_field_name("for completing", i)] = row.get("Award Name", "").strip()
-        field_map[_field_name("Den Leader", i)] = row.get("Den Leader", "").strip()
-        field_map[_field_name("Cubmaster", i)] = row.get("Cubmaster", "").strip()
+        scout_name = row.get("Scout Name", "").strip()
+        date_value = _format_date(row.get("Date", ""))
+        pack_number = row.get("Pack Number", "").strip()
+        den_number = (row.get("Den Number") or row.get("Den No.") or "").strip()
+        award_name = (row.get("Award Name") or row.get("Rank") or "").strip()
+        den_leader = row.get("Den Leader", "").strip()
+        cubmaster = row.get("Cubmaster", "").strip()
+
+        if has_rank_fields:
+            field_map[f"Childs name {i}"] = scout_name
+            field_map[f"Den No {i}"] = den_number
+            field_map[f"Pack No {i}"] = pack_number
+            field_map[f"DATE {i}"] = date_value
+            field_map[f"Den Leader {i}"] = den_leader
+            field_map[f"Cubmaster {i}"] = cubmaster
+            # Some rank templates expose the rank label as a fillable field.
+            field_map[f"Rank {i}"] = award_name
+            continue
+
+        field_map[f"name {i}"] = scout_name
+        field_map[_field_name("On", i)] = date_value
+        field_map[_field_name("Cub Scout Pack", i)] = pack_number
+        field_map[_field_name("for completing", i)] = award_name
+        field_map[_field_name("Den Leader", i)] = den_leader
+        field_map[_field_name("Cubmaster", i)] = cubmaster
     return field_map
 
 
@@ -261,7 +284,7 @@ def fill_certificates(
         page = page_reader.pages[0]
 
         page_rows = row_chunks[page_index]
-        field_map = _build_page_field_map(page_rows)
+        field_map = _build_page_field_map(page_rows, field_positions)
 
         page_size = (
             float(page.mediabox.width),

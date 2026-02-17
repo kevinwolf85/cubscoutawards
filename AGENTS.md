@@ -53,8 +53,8 @@ cubscout-awards --csv /path/to/awards.csv --output /path/to/filled_awards.pdf
   - `CERT_TEMPLATE_PATH_LION`, `CERT_TEMPLATE_PATH_TIGER`, `CERT_TEMPLATE_PATH_WOLF`
   - `CERT_TEMPLATE_PATH_BEAR`, `CERT_TEMPLATE_PATH_WEBELO`, `CERT_TEMPLATE_PATH_ARROW_OF_LIGHT`
 - Rank generation auto-detects non-fillable templates and falls back to `fill_rank_cards`.
-- Wolf rank cards render `Den Number`, `Pack Number`, and `Date` with baseline-anchored line coordinates, plus boxed centering for `Scout Name`, `Den Leader`, and `Cubmaster`.
-- Wolf rank signature rendering caps script size for legibility on the small printed lines.
+- Fillable rank templates (including Wolf) use rank-style AcroForm field mapping (`Childs name`, `Den No`, `Pack No`, `DATE`, `Den Leader`, `Cubmaster`).
+- Coordinate-based rank rendering remains as fallback for non-fillable templates.
 - Rank exports are rotated by default for print-friendly orientation (`RANK_OUTPUT_ROTATION_DEGREES=90`).
 - Rank shift mapping is display-space aware (aligned with Adventures), so UI `Shift Left`/`Shift Down` semantics remain consistent across rotated templates.
 - CI workflow: `.github/workflows/ci.yml` runs install + smoke checks.

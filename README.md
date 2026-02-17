@@ -4,13 +4,13 @@ Generate Cub Scout award certificates from a CSV and a fillable PDF template. In
 
 ## What's Included
 - `dev/fill_cub_scout_certs.py`: CSV -> filled PDF generator
-- `dev/fill_cub_scout_rank_cards.py`: CSV -> rendered rank-card PDF generator for non-fillable rank templates
+- `dev/fill_cub_scout_rank_cards.py`: CSV -> rendered rank-card PDF generator fallback for non-fillable rank templates
 - `dev/cert_form_ui/`: Frontend + Flask backend
   - `index.html` (home), `adventures.html`, `ranks.html`
   - `styles.css`, `nav.js`, `app.js`
   - `server.py`
   - `cub_scout_award_template.csv`
-- `assets/templates/wolf_rank_card.pdf`: Wolf rank template (non-fillable)
+- `assets/templates/wolf_rank_card.pdf`: Wolf rank template (fillable AcroForm)
 
 ## Requirements
 - Python 3.10+
@@ -113,8 +113,7 @@ cubscout-awards \
   - `combined_pdf` (single merged PDF)
   - `per_scout_zip` (ZIP containing one PDF per scout)
 - Ranks page uses the same controls as Adventures (CSV upload, fonts, shifts, validation, output modes) plus a `Rank` selector that drives template selection.
-- Wolf rank rendering uses tuned coordinates with baseline-anchored line fields (`Den Number`, `Pack Number`, `Date`) and boxed centering for `Scout Name`, `Den Leader`, and `Cubmaster`.
-- On Wolf rank cards, signature text size is capped for readability to avoid collisions with static labels.
+- Rank templates now use rank-style AcroForm field mapping when present (`Childs name`, `Den No`, `Pack No`, `DATE`, `Den Leader`, `Cubmaster`), with coordinate fallback only for non-fillable templates.
 - Rank shift controls (`Shift Left`, `Shift Down`) now follow the same display-direction mapping as Adventures.
 - Basic per-IP rate limiting is enabled for public safety:
   - `RATE_LIMIT_GENERATE_PER_MINUTE` (default `12`)

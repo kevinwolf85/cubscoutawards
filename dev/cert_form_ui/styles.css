@@ -260,6 +260,54 @@ body {
   padding-left: 6px;
 }
 
+.csv-mapper {
+  margin-top: 10px;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  background: rgba(255, 251, 235, 0.9);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.csv-mapper-head strong {
+  display: block;
+  font-size: 0.9rem;
+  color: #92400e;
+}
+
+.csv-mapper-head p {
+  margin: 4px 0 0;
+  color: #7c2d12;
+  font-size: 0.82rem;
+}
+
+.csv-mapper-list {
+  margin-top: 8px;
+  display: grid;
+  gap: 8px;
+}
+
+.csv-mapper-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(180px, 1.6fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.csv-mapper-row span {
+  font-size: 0.86rem;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.csv-mapper-row select {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #fbbf24;
+  background: #fff;
+}
+
 .rank-selector-field {
   align-content: start;
 }
@@ -652,6 +700,11 @@ body {
   .home-grid {
     grid-template-columns: 1fr;
     gap: 10px;
+  }
+
+  .csv-mapper-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 
   .home-option {

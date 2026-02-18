@@ -109,6 +109,8 @@ cubscout-awards \
 - Additional Google Fonts are available in the UI and rendered in PDFs via bundled font files in `assets/fonts`.
 - For local install, use editable mode (`pip install -e .`) so template/font assets under `assets/` are available.
 - CSV preflight validation is available in the UI (`Validate CSV`) and via `POST /validate-csv`.
+- If uploaded CSV headers do not match required fields, the UI now prompts for one-time column mapping (per upload/session) before validation or generation.
+- Header mapping is stateless: mappings are not saved server-side or persisted across page reloads.
 - Output modes:
   - `combined_pdf` (single merged PDF)
   - `per_scout_zip` (ZIP containing one PDF per scout)

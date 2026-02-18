@@ -44,6 +44,8 @@ cubscout-awards --csv /path/to/awards.csv --output /path/to/filled_awards.pdf
 - `--template` overrides the CLI template.
 - For local installs, use editable mode (`pip install -e .`) so `assets/` files remain available.
 - UI supports CSV preflight validation and output modes (`combined_pdf`, `per_scout_zip`) on both Adventures and Ranks pages.
+- UI includes stateless CSV header mapping: if required CSV headers do not match expected names, users map missing required fields for the current upload/session.
+- CSV mappings are sent with `/validate-csv` and `/generate` requests as one-time payloads and are not persisted.
 - UI is split into pages (`/`, `/adventures`, `/ranks`) with top-right hamburger navigation that stays hidden until clicked.
 - Ranks page mirrors Adventures controls and adds a rank selector (`Lion`, `Tiger`, `Wolf`, `Bear`, `Webelo`, `Arrow of Light`) to drive template selection.
 - Backend applies per-IP rate limiting:

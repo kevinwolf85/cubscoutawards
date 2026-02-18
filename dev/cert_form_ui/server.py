@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import os
 import re
 import tempfile
@@ -327,6 +328,60 @@ def _parse_csv_bytes(csv_bytes: bytes) -> tuple[list[str], list[dict[str, str]]]
     return list(reader.fieldnames), rows
 
 
+def _parse_csv_mapping(raw_mapping: str | None) -> tuple[dict[str, str], list[str]]:
+    if not raw_mapping:
+        return {}, []
+    try:
+        parsed = json.loads(raw_mapping)
+    except json.JSONDecodeError:
+        return {}, ["CSV mapping payload is not valid JSON."]
+    if not isinstance(parsed, dict):
+        return {}, ["CSV mapping payload must be an object."]
+
+    allowed_targets = set(GENERATOR_HEADERS + ["Rank"])
+    mapping: dict[str, str] = {}
+    errors: list[str] = []
+    for raw_target, raw_source in parsed.items():
+        target = (str(raw_target) if raw_target is not None else "").strip()
+        source = (str(raw_source) if raw_source is not None else "").strip()
+        if not target or not source:
+            continue
+        if target not in allowed_targets:
+            errors.append(f"Unsupported mapping target: {target}")
+            continue
+        mapping[target] = source
+    return mapping, errors
+
+
+def _apply_csv_mapping(
+    fieldnames: list[str], rows: list[dict[str, str]], mapping: dict[str, str]
+) -> tuple[list[str], list[dict[str, str]], list[str]]:
+    if not mapping:
+        return fieldnames, rows, []
+
+    source_headers = set(fieldnames)
+    errors: list[str] = []
+    for target, source in mapping.items():
+        if source not in source_headers:
+            errors.append(f"CSV mapping source header not found: {source} (for {target})")
+    if errors:
+        return fieldnames, rows, errors
+
+    mapped_fieldnames = list(fieldnames)
+    for target in mapping:
+        if target not in mapped_fieldnames:
+            mapped_fieldnames.append(target)
+
+    mapped_rows: list[dict[str, str]] = []
+    for row in rows:
+        mapped_row = dict(row)
+        for target, source in mapping.items():
+            mapped_row[target] = (row.get(source) or "").strip()
+        mapped_rows.append(mapped_row)
+
+    return mapped_fieldnames, mapped_rows, []
+
+
 def _normalize_pdf_rotation_in_place(pdf_path: Path, target_rotation: int) -> None:
     target = target_rotation % 360
     reader = PdfReader(str(pdf_path))
@@ -402,12 +457,18 @@ def validate_csv():
 
     workflow = request.form.get("workflow", "adventures")
     selected_rank = request.form.get("rank", "")
+    csv_mapping, mapping_errors = _parse_csv_mapping(request.form.get("csvMapping"))
+    if mapping_errors:
+        return jsonify({"error": "CSV mapping is invalid.", "mapping_errors": mapping_errors}), 400
 
     try:
         csv_bytes = csv_file.read()
         fieldnames, rows = _parse_csv_bytes(csv_bytes)
     except UnicodeDecodeError:
         return jsonify({"error": "CSV must be UTF-8 encoded."}), 400
+    fieldnames, rows, apply_errors = _apply_csv_mapping(fieldnames, rows, csv_mapping)
+    if apply_errors:
+        return jsonify({"error": "CSV mapping is invalid.", "mapping_errors": apply_errors}), 400
 
     report = _build_validation_report(fieldnames, rows, workflow=workflow, selected_rank=selected_rank)
     return jsonify(report)
@@ -437,6 +498,9 @@ def generate_pdf():
     output_mode = request.form.get("outputMode", "combined_pdf")
     workflow = request.form.get("workflow", "adventures")
     selected_rank = request.form.get("rank", "")
+    csv_mapping, mapping_errors = _parse_csv_mapping(request.form.get("csvMapping"))
+    if mapping_errors:
+        return jsonify({"error": "CSV mapping is invalid.", "mapping_errors": mapping_errors}), 400
     output_name = _safe_output_name(request.form.get("outputName", "filled_awards.pdf"))
     template_path = _selected_template(workflow, selected_rank)
 
@@ -448,6 +512,9 @@ def generate_pdf():
         fieldnames, rows = _parse_csv_bytes(csv_bytes)
     except UnicodeDecodeError:
         return jsonify({"error": "CSV must be UTF-8 encoded."}), 400
+    fieldnames, rows, apply_errors = _apply_csv_mapping(fieldnames, rows, csv_mapping)
+    if apply_errors:
+        return jsonify({"error": "CSV mapping is invalid.", "mapping_errors": apply_errors}), 400
 
     report = _build_validation_report(fieldnames, rows, workflow=workflow, selected_rank=selected_rank)
     if not report["ok"]:
